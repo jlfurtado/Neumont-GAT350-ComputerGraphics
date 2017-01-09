@@ -5,3 +5,5 @@
 *.obj
 *.sdf
 *.opendb
+*/Debug
+*/Release
