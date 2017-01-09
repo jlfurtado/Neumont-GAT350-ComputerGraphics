@@ -1,0 +1,50 @@
+﻿  BinaryWriter.cpp
+  BitmapLoader.cpp
+  BufferGroup.cpp
+  BufferInfo.cpp
+  BufferManager.cpp
+  Camera.cpp
+  ChaseCameraComponent.cpp
+  ChaseCamera.cpp
+  CollisionTester.cpp
+  Component.cpp
+  ConfigReader.cpp
+  Entity.cpp
+  GameLogger.cpp
+  GameTime.cpp
+  GraphicalObject.cpp
+  GraphicalObjectComponent.cpp
+  KeyValuePair.cpp
+  KeyValuePairs.cpp
+  Mat2.cpp
+  Mat3.cpp
+  Compiling...
+  Mat4.cpp
+  MathUtility.cpp
+  MessageType.cpp
+  MouseManager.cpp
+  MousePicker.cpp
+  MyFiles.cpp
+  MyGL.cpp
+  MyWindow.cpp
+  MyWindow.moc.cpp
+  Perspective.cpp
+  RenderEngine.cpp
+  ShaderProgram.cpp
+  ShapeGenerator.cpp
+  SpatialComponent.cpp
+  SpatialGrid.cpp
+  StringFuncs.cpp
+  TextObject.cpp
+  UniformData.cpp
+  Vec2.cpp
+  Vec3.cpp
+  Compiling...
+  Vec4.cpp
+  VertexFormat.cpp
+     Creating library D:\Engine\EngineDemo\Release\Engine.lib and object D:\Engine\EngineDemo\Release\Engine.exp
+  Generating code
+  All 940 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  Engine.vcxproj -> D:\Engine\EngineDemo\Release\Engine.dll
+  Engine.vcxproj -> D:\Engine\EngineDemo\Release\Engine.pdb (Full PDB)

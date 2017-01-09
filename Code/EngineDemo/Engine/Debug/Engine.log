@@ -1,0 +1,4 @@
+﻿  ShaderProgram.cpp
+d:\engine\enginedemo\engine\shaderprogram.cpp(273): warning C4800: 'const GLboolean': forcing value to bool 'true' or 'false' (performance warning)
+  Engine.vcxproj -> D:\Engine\EngineDemo\Debug\Engine.dll
+  Engine.vcxproj -> D:\Engine\EngineDemo\Debug\Engine.pdb (Partial PDB)
