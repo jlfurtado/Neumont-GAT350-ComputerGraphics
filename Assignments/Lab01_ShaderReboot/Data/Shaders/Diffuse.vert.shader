@@ -12,7 +12,6 @@ layout(location = 10) uniform vec3 tint;
 layout(location = 15) uniform vec3 lightPos_WorldSpace;
 layout(location = 4) uniform vec3 diffuseLightColor;
 layout(location = 3) uniform vec3 diffuseLightIntensity;
-layout(location = 7) uniform vec3 cameraPosition_WorldSpace;
 
 void main()
 {
@@ -25,8 +24,6 @@ void main()
 
 	vec3 normal = normalize(fragmentNormal_WorldSpace);
 	vec3 lightDirection = normalize(fragmentLightPosition_WorldSpace - fragmentPosition_WorldSpace);
-	vec3 viewDirection = normalize(cameraPosition_WorldSpace - fragmentPosition_WorldSpace);
-	vec3 reflectionDirection = reflect(-lightDirection, normal);
 
 	vec3 diffuseLight = diffuseLightColor * diffuseLightIntensity * max(dot(normal, lightDirection), 0.0f);
 	lightColor = vec4(clamp((diffuseLight)* objectColor, 0.0f, 1.0f), 1.0f);
