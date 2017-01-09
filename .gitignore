@@ -4,6 +4,6 @@
 *.ipch
 *.obj
 *.sdf
-Code/EngineDemo/Data/Logs/
-Assignments/EngineDemo/Data/Logs/
+Code/EngineDemo/Data/Logs/*
+Assignments/EngineDemo/Data/Logs/*
 *.opendb
