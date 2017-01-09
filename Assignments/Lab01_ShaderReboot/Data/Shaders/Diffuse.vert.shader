@@ -3,10 +3,6 @@
 layout(location = 0) in vec3 vertexPosition;
 layout(location = 1) in vec3 vertexNormal;
 
-out vec3 objectColor;
-out vec3 fragmentNormal_WorldSpace;
-out vec3 fragmentPosition_WorldSpace;
-out vec3 fragmentLightPosition_WorldSpace;
 out vec4 lightColor;
 
 layout(location = 13) uniform mat4 modelToWorld;
@@ -21,10 +17,11 @@ layout(location = 7) uniform vec3 cameraPosition_WorldSpace;
 void main()
 {
 	gl_Position = projection * worldToView * modelToWorld * vec4(vertexPosition, 1.0f);
-	objectColor = tint;
-	fragmentLightPosition_WorldSpace = lightPos_WorldSpace;
-	fragmentPosition_WorldSpace = vec3(modelToWorld * vec4(vertexPosition, 1.0f));
-	fragmentNormal_WorldSpace = mat3(transpose(inverse(modelToWorld))) * vertexNormal;
+	vec3 objectColor = tint;
+
+	vec3 fragmentLightPosition_WorldSpace = lightPos_WorldSpace;
+	vec3 fragmentPosition_WorldSpace = vec3(modelToWorld * vec4(vertexPosition, 1.0f));
+	vec3 fragmentNormal_WorldSpace = mat3(transpose(inverse(modelToWorld))) * vertexNormal;
 
 	vec3 normal = normalize(fragmentNormal_WorldSpace);
 	vec3 lightDirection = normalize(fragmentLightPosition_WorldSpace - fragmentPosition_WorldSpace);
