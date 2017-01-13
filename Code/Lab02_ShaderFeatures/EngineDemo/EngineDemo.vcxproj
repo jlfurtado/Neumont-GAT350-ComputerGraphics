@@ -165,6 +165,8 @@
     <None Include="..\Data\Shaders\Diffuse.vert.shader" />
     <None Include="..\Data\Shaders\DiffuseFunctions.frag.shader" />
     <None Include="..\Data\Shaders\DiffuseFunctions.vert.shader" />
+    <None Include="..\Data\Shaders\FlatPhong.frag.shader" />
+    <None Include="..\Data\Shaders\FlatPhong.vert.shader" />
     <None Include="..\Data\Shaders\PC.frag.shader" />
     <None Include="..\Data\Shaders\PC.vert.shader" />
     <None Include="..\Data\Shaders\Phong.vert.shader" />
