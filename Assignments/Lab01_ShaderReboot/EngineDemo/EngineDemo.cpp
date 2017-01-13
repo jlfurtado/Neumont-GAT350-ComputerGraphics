@@ -46,6 +46,11 @@ Engine::GraphicalObjectComponent playerGob;
 Engine::SpatialComponent playerSpatial;
 MouseComponent mouseComponent;
 KeyboardComponent playerInput;
+Engine::GraphicalObject goodCube;
+Engine::GraphicalObject badCube;
+Engine::Vec3 goodCubeBasePos(Engine::Vec3(10.0f, 0.0f, -50.0f));
+Engine::Vec3 badCubeBasePos(Engine::Vec3(-10.0f, 0.0f, -50.0f));
+float cubeTestDiff = 10.0f;
 
 bool EngineDemo::Initialize(Engine::MyWindow *window)
 {
@@ -132,6 +137,24 @@ bool EngineDemo::Initialize(Engine::MyWindow *window)
 		m_lights[i].SetRotationRate(Engine::MathUtility::PI / 10.0f);
 		Engine::RenderEngine::AddGraphicalObject(&m_lights[i]);
 	}
+
+	Engine::ShapeGenerator::MakeCube(&goodCube);
+	goodCube.SetBaseColor(Engine::Vec3(1.0f, 1.0f, 1.0f));
+	goodCube.SetTintColor(Engine::Vec3(1.0f, 1.0f, 1.0f));
+	goodCube.SetCallback(EngineDemo::PCCallback, this);
+	goodCube.SetTransMat(Engine::Mat4::Translation(goodCubeBasePos + Engine::Vec3(0.0f, 10.0f, 0.0f)));
+	goodCube.SetRotationAxis(Engine::Vec3(1.0f, 0.0f, 0.0f));
+	goodCube.SetRotationRate(Engine::MathUtility::PI / 1.0f);
+	Engine::RenderEngine::AddGraphicalObject(&goodCube);
+
+	Engine::ShapeGenerator::MakeCube(&badCube);
+	badCube.SetBaseColor(Engine::Vec3(1.0f, 1.0f, 1.0f));
+	badCube.SetTintColor(Engine::Vec3(1.0f, 1.0f, 1.0f));
+	badCube.SetCallback(EngineDemo::PCCallback, this);
+	badCube.SetTransMat(Engine::Mat4::Translation(badCubeBasePos + Engine::Vec3(0.0f, 10.0f, 0.0f)));
+	badCube.SetRotationAxis(Engine::Vec3(1.0f, 0.0f, 0.0f));
+	badCube.SetRotationRate(Engine::MathUtility::PI / 1.0f);
+	Engine::RenderEngine::AddGraphicalObject(&badCube);
 
 	if (!ReadConfigValues())
 	{
@@ -244,6 +267,25 @@ void EngineDemo::Update(float dt)
 		Engine::Mat4 rotationAroundAxis = Engine::Mat4::RotationAroundAxis(m_lights[i].GetRotationAxis(), m_lights[i].GetRotation());
 		m_lights[i].SetTransMat(Engine::Mat4::Translation(teapotPos + (ROTATE_DISTANCE * (rotationAroundAxis * xyz))));
 	}
+
+	goodCube.SetRotation(goodCube.GetRotation() + goodCube.GetRotationRate() * dt);
+	Engine::Mat4 rotationMat = Engine::Mat4::RotationAroundAxis(goodCube.GetRotationAxis(), goodCube.GetRotation());
+	goodCube.SetTransMat(Engine::Mat4::Translation(goodCubeBasePos + ((rotationMat * Engine::Vec3(0.0f, 10.0f, 0.0f)))));
+
+	static Engine::Vec3 offsetVec(0.0f, 10.0f, 0.0f);
+	Engine::Mat4 badRotationMat = Engine::Mat4::RotationAroundAxis(badCube.GetRotationAxis(), badCube.GetRotationRate() * dt);
+	offsetVec = badRotationMat * offsetVec;
+	badCube.SetTransMat(Engine::Mat4::Translation(badCubeBasePos + offsetVec));
+
+	float goodAngle = Engine::MathUtility::ToDegrees(acosf((goodCube.GetPos() - goodCubeBasePos).Normalize().Dot(Engine::Vec3(0.0f, 10.0f, 0.0f).Normalize())));
+	float badAngle = Engine::MathUtility::ToDegrees(acosf((badCube.GetPos() - badCubeBasePos).Normalize().Dot(Engine::Vec3(0.0f, 10.0f, 0.0f).Normalize())));
+	
+	static float timer = 0.0f;
+	timer += dt;
+
+	char buffer[50];
+	sprintf_s(&buffer[0], 50, "%3.3f : %3.3f : %3.3f", goodAngle, badAngle, (goodAngle - badAngle));
+	m_EngineDemoInfoObject.SetupText(0.3f, 0.9f, 0.0f, 1.0f, 0.0f, 1.0f, 0.5f, 1.0f, buffer);
 
 	player.Update(dt);
 }
