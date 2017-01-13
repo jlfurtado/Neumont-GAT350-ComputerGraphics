@@ -35,10 +35,10 @@ namespace Engine
 	public:
 		// ctor/dtor
 		Mesh()
-			: m_vertexCount(0), m_indexCount(0), m_pVertices(nullptr), m_pIndices(nullptr), m_renderInfo(RenderInfo()), m_meshMode(GL_TRIANGLES), m_indexSize(IndexSizeInBytes::Uint), m_indexed(true), m_shaderProgramID(0), m_vertexFormat(VertexFormat::None) {}
-		Mesh(GLuint vertexCount, GLuint indexCount, void *pVertices, void *pIndices, GLenum meshMode, IndexSizeInBytes indexSize, GLuint shaderProgramID, VertexFormat format)
+			: m_vertexCount(0), m_indexCount(0), m_pVertices(nullptr), m_pIndices(nullptr), m_renderInfo(RenderInfo()), m_meshMode(GL_TRIANGLES), m_indexSize(IndexSizeInBytes::Uint), m_indexed(true), m_shaderProgramID(0), m_vertexFormat(VertexFormat::None), m_isCullingEnabledForObject(true) {}
+		Mesh(GLuint vertexCount, GLuint indexCount, void *pVertices, void *pIndices, GLenum meshMode, IndexSizeInBytes indexSize, GLuint shaderProgramID, VertexFormat format, bool cullForObject = true)
 			: m_vertexCount(vertexCount), m_indexCount(indexCount), m_pVertices(pVertices), m_pIndices(pIndices), m_renderInfo(RenderInfo()), m_meshMode(meshMode),
-			m_indexed(indexCount > 0), m_indexSize(indexSize), m_shaderProgramID(shaderProgramID), m_vertexFormat(format) {}
+			m_indexed(indexCount > 0), m_indexSize(indexSize), m_shaderProgramID(shaderProgramID), m_vertexFormat(format), m_isCullingEnabledForObject(cullForObject) {}
 		~Mesh() {}
 
 		// getters
@@ -52,6 +52,7 @@ namespace Engine
 		GLuint GetShaderProgramID() { return m_shaderProgramID; }
 		IndexSizeInBytes GetIndexSize() { return m_indexSize; }
 		GLuint GetSizeOfVertex() { return VertexFormatSize(m_vertexFormat); }
+		bool IsCullingEnabledForObject() { return m_isCullingEnabledForObject; }
 		GLuint GetTextureID() { return m_textureID; }
 		
 		void *GetPointerToVertexAt(unsigned int index)
@@ -113,6 +114,7 @@ namespace Engine
 		GLboolean m_indexed;
 		VertexFormat m_vertexFormat;
 		GLuint m_shaderProgramID;
+		bool m_isCullingEnabledForObject;
 	};
 }
 

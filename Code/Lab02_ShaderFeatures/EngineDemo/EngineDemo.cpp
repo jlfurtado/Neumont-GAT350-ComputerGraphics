@@ -112,7 +112,7 @@ bool EngineDemo::Initialize(Engine::MyWindow *window)
 
 	for (int i = 0; i < NUM_TEAPOTS; ++i)
 	{
-		Engine::ShapeGenerator::ReadSceneFile("..\\Data\\Scenes\\Teapot.PN.Scene", &m_teapots[i], m_shaderPrograms[3].GetProgramId());
+		Engine::ShapeGenerator::ReadSceneFile("..\\Data\\Scenes\\TeapotNoLid.PN.Scene", &m_teapots[i], m_shaderPrograms[3].GetProgramId(), nullptr, false);
 		m_teapots[i].SetTransMat(Engine::Mat4::Translation(Engine::Vec3(i*TEAPOT_DISTANCE - TEAPOT_DISTANCE, 0.0f, 0.0f)));
 		m_teapots[i].SetRotMat(Engine::Mat4::RotationAroundAxis(Engine::Vec3(i % 3 == 0 ? 1.0f : 0.0f,
 																			 i % 3 == 1 ? 1.0f : 0.0f,
@@ -126,9 +126,9 @@ bool EngineDemo::Initialize(Engine::MyWindow *window)
 		m_teapots[i].GetMatPtr()->m_diffuseReflectivity = i % 3 == 0 ? Engine::Vec3(0.0f, 0.0f, 0.9f)
 															: i % 3 == 1 ? Engine::Vec3(0.9f, 0.9f, 0.0f) 
 															: Engine::Vec3(0.75f, 0.75f, 0.75f);
-		m_teapots[i].GetMatPtr()->m_ambientReflectivity = Engine::Vec3(0.10f, 0.10f, 0.10f);
+		m_teapots[i].GetMatPtr()->m_ambientReflectivity = 0.1f * m_teapots[i].GetMatPtr()->m_diffuseReflectivity;
 		m_teapots[i].GetMatPtr()->m_specularReflectivity = Engine::Vec3(1.0f, 1.0f, 1.0f);
-		m_teapots[i].GetMatPtr()->m_specularIntensity = 32.0f;
+		m_teapots[i].GetMatPtr()->m_specularIntensity = 16.0f;
 
 		Engine::RenderEngine::AddGraphicalObject(&m_teapots[i]);
 
@@ -380,7 +380,6 @@ bool EngineDemo::InitializeGL()
 
 	glEnable(GL_DEPTH_TEST);
 
-	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 	glFrontFace(GL_CCW);
 
@@ -410,8 +409,8 @@ bool EngineDemo::InitializeGL()
 
 	if (m_shaderPrograms[3].Initialize())
 	{					 
-		m_shaderPrograms[3].AddVertexShader("..\\Data\\Shaders\\Phong.vert.shader");
-		m_shaderPrograms[3].AddFragmentShader("..\\Data\\Shaders\\Phong.frag.shader");
+		m_shaderPrograms[3].AddVertexShader("..\\Data\\Shaders\\TwoSidedPhong.vert.shader");
+		m_shaderPrograms[3].AddFragmentShader("..\\Data\\Shaders\\TwoSidedPhong.frag.shader");
 		m_shaderPrograms[3].LinkProgram();
 		m_shaderPrograms[3].UseProgram();
 	}

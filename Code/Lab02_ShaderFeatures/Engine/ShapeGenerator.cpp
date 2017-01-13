@@ -450,14 +450,14 @@ namespace Engine
 	}
 
 
-	bool ShapeGenerator::ReadSceneFile(const char * fileName, GraphicalObject * pObject, GLint shaderProgramID, const char *texturePath)
+	bool ShapeGenerator::ReadSceneFile(const char * fileName, GraphicalObject * pObject, GLint shaderProgramID, const char *texturePath, bool cullObject)
 	{
-		Mesh *pSceneMesh = FindMeshBySceneString(fileName);
+		Mesh *pSceneMesh = FindMeshBySceneString(fileName, cullObject, shaderProgramID);
 
 		// if the mesh doesn't exist set it up
-		if (!pSceneMesh)
+		if (!pSceneMesh || (shaderProgramID != pSceneMesh->GetShaderProgramID()) || (cullObject != pSceneMesh->IsCullingEnabledForObject()))
 		{
-			if (!SetupSceneFile(fileName, shaderProgramID, texturePath))
+			if (!SetupSceneFile(fileName, shaderProgramID, texturePath, cullObject))
 			{
 				GameLogger::Log(MessageType::cError, "ShapeGenerator failed to ReadSceneFile()! failed to SetupSceneFile([%s])!\n", fileName);
 				return false;
@@ -465,7 +465,7 @@ namespace Engine
 		}
 
 		// set scene mesh again... since it has been added
-		pSceneMesh = FindMeshBySceneString(fileName);
+		pSceneMesh = FindMeshBySceneString(fileName, cullObject, shaderProgramID);
 
 		// point to the scene mesh
 		pObject->SetMeshPointer(pSceneMesh);
@@ -658,11 +658,11 @@ namespace Engine
 		return true;
 	}
 
-	Mesh * ShapeGenerator::FindMeshBySceneString(const char * const sceneName)
+	Mesh * ShapeGenerator::FindMeshBySceneString(const char * const sceneName, bool cull, int shaderId)
 	{
 		for (int i = 0; i < s_nextSceneFile; ++i)
 		{
-			if (StringFuncs::StringsAreEqual(sceneName, s_sceneFileNames[i]))
+			if (StringFuncs::StringsAreEqual(sceneName, s_sceneFileNames[i]) && (cull == s_sceneMeshes[i]->IsCullingEnabledForObject()) && (shaderId == s_sceneMeshes[i]->GetShaderProgramID()))
 			{
 				return s_sceneMeshes[i];
 			}
@@ -675,7 +675,7 @@ namespace Engine
 	bool ShapeGenerator::AddMesh(const char * const sceneName, Mesh * pMeshToAdd)
 	{
 		// error checking
-		if (FindMeshBySceneString(sceneName)) { GameLogger::Log(MessageType::cError, "ShapeGenerator failed to AddMesh([%s],[%p])! Scene already exists!\n", sceneName, pMeshToAdd); return false; }
+		if (FindMeshBySceneString(sceneName, pMeshToAdd->IsCullingEnabledForObject(), pMeshToAdd->GetShaderProgramID())) { GameLogger::Log(MessageType::cError, "ShapeGenerator failed to AddMesh([%s],[%p])! Scene already exists!\n", sceneName, pMeshToAdd); return false; }
 		if (s_nextSceneFile >= MAX_SCENE_FILES) { GameLogger::Log(MessageType::cError, "ShapeGenerator failed to AddMesh([%s],[%p])! Ran out of space!\n", sceneName, pMeshToAdd); return false; }
 		if (!pMeshToAdd) { GameLogger::Log(MessageType::cError, "ShapeGenerator failed to AddMesh([%s],[%p])! pMeshToAdd was nullptr!\n", sceneName, pMeshToAdd); return false; }
 
@@ -688,7 +688,7 @@ namespace Engine
 		return true;
 	}
 
-	bool ShapeGenerator::SetupSceneFile(const char * fileName, GLint shaderProgramID, const char *texturePath)
+	bool ShapeGenerator::SetupSceneFile(const char * fileName, GLint shaderProgramID, const char *texturePath, bool cull)
 	{
 		// create binary reading input file stream
 		std::ifstream inputStream(fileName, std::ios::binary | std::ios::in);
@@ -759,7 +759,7 @@ namespace Engine
 		char *pIndices = pVertices + (pSceneMesh->GetSizeOfVertex()*pSceneMesh->GetVertexCount());
 
 		// TODO: remove hard coded ColorVertex*s here!!!!!!
-		*pSceneMesh = Mesh(pSceneMesh->GetVertexCount(), pSceneMesh->GetIndexCount(), pVertices, pIndices, pSceneMesh->GetMeshMode(), IndexSizeInBytes::Uint, shaderProgramID, pSceneMesh->GetVertexFormat());
+		*pSceneMesh = Mesh(pSceneMesh->GetVertexCount(), pSceneMesh->GetIndexCount(), pVertices, pIndices, pSceneMesh->GetMeshMode(), IndexSizeInBytes::Uint, shaderProgramID, pSceneMesh->GetVertexFormat(), cull);
 
 		// if the mesh should be textured texture it
 		if (pSceneMesh->GetVertexFormat() & VertexFormat::HasTexture && texturePath)
@@ -799,6 +799,7 @@ namespace Engine
 			GameLogger::Log(MessageType::cError, "ShapeGenerator failed to read scene file [%s], failed to add mesh to list!\n", fileName);
 			return false;
 		}
+
 
 		GameLogger::Log(MessageType::Process, "ShapeGenerator successfully set up scene file [%s]!\n", fileName);
 		return true;

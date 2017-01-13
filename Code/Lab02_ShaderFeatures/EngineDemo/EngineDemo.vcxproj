@@ -171,6 +171,8 @@
     <None Include="..\Data\Shaders\Phong.frag.shader" />
     <None Include="..\Data\Shaders\PT.frag.shader" />
     <None Include="..\Data\Shaders\PT.vert.shader" />
+    <None Include="..\Data\Shaders\TwoSidedPhong.frag.shader" />
+    <None Include="..\Data\Shaders\TwoSidedPhong.vert.shader" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EngineDemo.h" />

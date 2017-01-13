@@ -21,16 +21,8 @@ namespace Engine
 
 		switch (m_uniformType)
 		{
-		case GL_INT:
-			glUniform1i(m_uniformDataLoc, *reinterpret_cast<int*>(m_pUniformData));
-			break;
-
-		case GL_FLOAT:
-			glUniform1f(m_uniformDataLoc, *reinterpret_cast<float*>(m_pUniformData));
-			break;
-
-		case GL_FLOAT_VEC2:
-			glUniform2f(m_uniformDataLoc, *reinterpret_cast<float*>(m_pUniformData), *(reinterpret_cast<float*>(m_pUniformData) + 1));
+		case GL_FLOAT_MAT4:
+			glUniformMatrix4fv(m_uniformDataLoc, 1, GL_FALSE, reinterpret_cast<float*>(m_pUniformData));
 			break;
 
 		case GL_FLOAT_VEC3:
@@ -38,8 +30,16 @@ namespace Engine
 			//GameLogger::Log(MessageType::ConsoleOnly, "Passed (%.3f, %.3f, %.3f) to uniform [%d]\n", *reinterpret_cast<float*>(m_pUniformData), *(reinterpret_cast<float*>(m_pUniformData) + 1), *(reinterpret_cast<float*>(m_pUniformData) + 2), m_uniformDataLoc);
 			break;
 
-		case GL_FLOAT_MAT4:
-			glUniformMatrix4fv(m_uniformDataLoc, 1, GL_FALSE, reinterpret_cast<float*>(m_pUniformData));
+		case GL_FLOAT:
+			glUniform1f(m_uniformDataLoc, *reinterpret_cast<float*>(m_pUniformData));
+			break;
+
+		case GL_INT:
+			glUniform1i(m_uniformDataLoc, *reinterpret_cast<int*>(m_pUniformData));
+			break;
+
+		case GL_FLOAT_VEC2:
+			glUniform2f(m_uniformDataLoc, *reinterpret_cast<float*>(m_pUniformData), *(reinterpret_cast<float*>(m_pUniformData) + 1));
 			break;
 
 		default:

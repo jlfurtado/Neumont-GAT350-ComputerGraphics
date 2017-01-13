@@ -95,6 +95,14 @@ namespace Engine
 				continue; // move on to next buffer group if unable to use shader program
 			}
 
+			// grouped based on culling, set culling once for the whole group instead of for every object!
+			if (pCurrentBufferGroup->BufferGroupDoesCull()) { 
+				glEnable(GL_CULL_FACE); 
+			}
+			else {
+				glDisable(GL_CULL_FACE); 
+			}
+
 			// for each buffer info in the specific buffer group
 			for (int j = 0; j < pCurrentBufferGroup->GetNextBufferInfo(); ++j)
 			{

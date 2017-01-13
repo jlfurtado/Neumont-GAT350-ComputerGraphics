@@ -20,11 +20,12 @@ namespace Engine
 	{
 	}
 
-	bool BufferGroup::Initialize(GLuint defaultBufferSize, VertexFormat bufferGroupVertexFormat, GLint shaderProgramID)
+	bool BufferGroup::Initialize(GLuint defaultBufferSize, VertexFormat bufferGroupVertexFormat, GLint shaderProgramID, bool cullForObjectsInBuffer)
 	{
 		m_defaultBuffersize = defaultBufferSize;
 		m_vertexFormat = bufferGroupVertexFormat;
 		m_shaderProgramID = shaderProgramID;
+		m_cullForObjectsInBuffer= cullForObjectsInBuffer;
 
 		GameLogger::Log(MessageType::Process, "BufferGroup initialize successful!\n");
 		return true;
@@ -111,22 +112,27 @@ namespace Engine
 		}
 	}
 
-	bool BufferGroup::BelongsInThisGroup(VertexFormat format, GLint shaderProgramID)
+	bool BufferGroup::BelongsInThisGroup(VertexFormat format, GLint shaderProgramID, bool cull)
 	{
-		// mesh/gob should go in this group if it is of the same vertex format and uses the same shader
-		return (format == m_vertexFormat) && (m_shaderProgramID == shaderProgramID);
+		// mesh/gob should go in this group if it is of the same vertex format and uses the same shader, and has the same culling state
+		return (format == m_vertexFormat) && (m_shaderProgramID == shaderProgramID) && (cull == m_cullForObjectsInBuffer);
 	}
 
 	bool BufferGroup::BelongsInThisGroup(Mesh * pMeshToCheck)
 	{
 		if (!pMeshToCheck) { GameLogger::Log(MessageType::cWarning, "Buffer group could not check if mesh belongs in group. Mesh to be checked was nullptr!\n"); return false; }
-		return BelongsInThisGroup(pMeshToCheck->GetVertexFormat(), pMeshToCheck->GetShaderProgramID());
+		return BelongsInThisGroup(pMeshToCheck->GetVertexFormat(), pMeshToCheck->GetShaderProgramID(), pMeshToCheck->IsCullingEnabledForObject());
 	}
 
 	bool BufferGroup::BelongsInThisGroup(GraphicalObject * pGraphicalObjectToCheck)
 	{
 		if (!pGraphicalObjectToCheck) { GameLogger::Log(MessageType::cWarning, "Buffer group could not check if graphical object belongs in group. GraphicalObject to be checked was nullptr!\n"); return false; }
 		return BelongsInThisGroup(pGraphicalObjectToCheck->GetMeshPointer());
+	}
+
+	bool BufferGroup::BufferGroupDoesCull()
+	{
+		return m_cullForObjectsInBuffer;
 	}
 
 	GLint BufferGroup::GetNextBufferInfo()

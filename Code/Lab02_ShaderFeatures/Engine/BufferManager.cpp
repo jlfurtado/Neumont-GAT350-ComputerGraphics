@@ -75,7 +75,7 @@ namespace Engine
 				return false;
 			}
 
-			s_bufferGroups[s_nextBufferGroup].Initialize(s_bufferSize, pMeshToAdd->GetVertexFormat(), pMeshToAdd->GetShaderProgramID());
+			s_bufferGroups[s_nextBufferGroup].Initialize(s_bufferSize, pMeshToAdd->GetVertexFormat(), pMeshToAdd->GetShaderProgramID(), pMeshToAdd->IsCullingEnabledForObject());
 
 			if (!s_bufferGroups[s_nextBufferGroup++].AddMesh(pMeshToAdd))
 			{

@@ -72,6 +72,12 @@
     <None Include="..\Data\Shaders\Phong.frag.shader">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="..\Data\Shaders\TwoSidedPhong.frag.shader">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Data\Shaders\TwoSidedPhong.vert.shader">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EngineDemo.h">
