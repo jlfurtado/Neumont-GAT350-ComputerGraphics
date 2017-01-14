@@ -33,7 +33,10 @@
 // EngineDemo.cpp
 // The game
 
-const int NUM_TEAPOTS = 3;
+const int NUM_USED_SHADERS = 10;
+const int NUM_NON_TEAPOT_SHADERS = 4;
+const int TEAPOTS_PER_SHADER = 3;
+const int NUM_TEAPOTS = (NUM_USED_SHADERS-NUM_NON_TEAPOT_SHADERS)*TEAPOTS_PER_SHADER;
 const float TEAPOT_DISTANCE = 30.0f;
 const float ROTATE_DISTANCE = TEAPOT_DISTANCE / 2.5f;
 Engine::GraphicalObject m_teapots[NUM_TEAPOTS];
@@ -103,15 +106,40 @@ bool EngineDemo::Initialize(Engine::MyWindow *window)
 
 	for (int i = 0; i < NUM_TEAPOTS; ++i)
 	{
-		Engine::ShapeGenerator::ReadSceneFile("..\\Data\\Scenes\\TeapotNoLid.PN.Scene", &m_teapots[i], m_shaderPrograms[3].GetProgramId(), nullptr, false);
-		m_teapots[i].SetTransMat(Engine::Mat4::Translation(Engine::Vec3(i*TEAPOT_DISTANCE - TEAPOT_DISTANCE, 0.0f, 0.0f)));
+		int shaderIndex = 3 + i / 3;
+		if (i == NUM_TEAPOTS - 1) { shaderIndex++; }
+		Engine::ShapeGenerator::ReadSceneFile("..\\Data\\Scenes\\TeapotNoLid.PN.Scene", &m_teapots[i], m_shaderPrograms[shaderIndex].GetProgramId(), nullptr, shaderIndex != 6);
+		m_teapots[i].SetTransMat(Engine::Mat4::Translation(Engine::Vec3(((i%TEAPOTS_PER_SHADER)*TEAPOT_DISTANCE - TEAPOT_DISTANCE), (shaderIndex >= 8) ? TEAPOT_DISTANCE : 0.0f, (i / TEAPOTS_PER_SHADER) * TEAPOT_DISTANCE)));
 		m_teapots[i].SetRotMat(Engine::Mat4::RotationAroundAxis(Engine::Vec3(i % 3 == 0 ? 1.0f : 0.0f,
 																			 i % 3 == 1 ? 1.0f : 0.0f,
 																			 i % 3 == 2 ? 1.0f : 0.0f), Engine::MathUtility::PI / 2.0f));
 		m_teapots[i].SetScaleMat(Engine::Mat4::Scale(2.0f));
-		m_teapots[i].AddPhongUniforms(modelToWorldMatLoc, worldToViewMatLoc, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), perspectiveMatLoc, m_perspective.GetPerspectivePtr()->GetAddress(),
-									  tintColorLoc, diffuseColorLoc, ambientColorLoc, specularColorLoc, specularPowerLoc, diffuseIntensityLoc, ambientIntensityLoc, specularIntensityLoc,
-									  &m_lights[i].GetMatPtr()->m_materialColor, cameraPosLoc, playerCamera.GetPosPtr(), lightLoc, m_lights[i].GetLocPtr());
+
+		if (i >= 6)
+		{
+			m_teapots[i].AddPhongUniforms(modelToWorldMatLoc, worldToViewMatLoc, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), perspectiveMatLoc, m_perspective.GetPerspectivePtr()->GetAddress(),
+				tintColorLoc, diffuseColorLoc, ambientColorLoc, specularColorLoc, specularPowerLoc, diffuseIntensityLoc, ambientIntensityLoc, specularIntensityLoc,
+				&m_lights[i].GetMatPtr()->m_materialColor, cameraPosLoc, playerCamera.GetPosPtr(), lightLoc, m_lights[i].GetLocPtr());
+			if (i == 15)
+			{
+				m_teapots[i].AddUniformData(Engine::UniformData(GL_FRAGMENT_SHADER, &phongShaderMethodIndex, 1));
+			}
+			else if (i == 16)
+			{
+				m_teapots[i].AddUniformData(Engine::UniformData(GL_FRAGMENT_SHADER, &diffuseShaderMethodIndex, 1));
+			}
+			else if (i == 17) {}
+		}
+		else
+		{
+			m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_teapots[i].GetFullTransformPtr(), modelToWorldMatLoc));
+			m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), worldToViewMatLoc));
+			m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_perspective.GetPerspectivePtr()->GetAddress(), perspectiveMatLoc));
+			m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_teapots[i].GetMatPtr()->m_materialColor, tintColorLoc));
+			m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_teapots[i].GetMatPtr()->m_diffuseReflectivity, diffuseColorLoc));
+			m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[i].GetMatPtr()->m_materialColor, diffuseIntensityLoc));
+			m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, m_lights[i].GetLocPtr(), lightLoc));
+		}
 
 		m_teapots[i].GetMatPtr()->m_materialColor = Engine::Vec3(1.0f, 1.0f, 1.0f);
 		m_teapots[i].GetMatPtr()->m_diffuseReflectivity = i % 3 == 0 ? Engine::Vec3(0.0f, 0.0f, 0.9f)
@@ -141,8 +169,8 @@ bool EngineDemo::Initialize(Engine::MyWindow *window)
 										i % 3 == 1 ? 1.0f : 0.0f,
 										i % 3 == 2 ? 1.0f : 0.0f);
 		m_lights[i].SetRotationAxis(xyz);
-		Engine::Vec3 zyx(xyz.GetZ(), xyz.GetY(), xyz.GetX());
-		m_lights[i].SetTransMat(Engine::Mat4::Translation(Engine::Vec3(i*TEAPOT_DISTANCE - TEAPOT_DISTANCE, 0.0f, 0.0f) + (zyx.Normalize() * ROTATE_DISTANCE)));
+		Engine::Vec3 rot(xyz.GetY(), xyz.GetZ(), xyz.GetX());
+		m_lights[i].SetTransMat(Engine::Mat4::Translation(Engine::Vec3(i*TEAPOT_DISTANCE - TEAPOT_DISTANCE, 0.0f, 0.0f) + (rot.Normalize() * ROTATE_DISTANCE)));
 
 		m_lights[i].SetRotationRate(Engine::MathUtility::PI / 10.0f);
 		Engine::RenderEngine::AddGraphicalObject(&m_lights[i]);
@@ -363,28 +391,80 @@ bool EngineDemo::InitializeGL()
 
 	if (m_shaderPrograms[3].Initialize())
 	{					 
-		m_shaderPrograms[3].AddVertexShader("..\\Data\\Shaders\\FlatPhong.vert.shader");
-		m_shaderPrograms[3].AddFragmentShader("..\\Data\\Shaders\\FlatPhong.frag.shader");
+		m_shaderPrograms[3].AddVertexShader("..\\Data\\Shaders\\Diffuse.vert.shader");
+		m_shaderPrograms[3].AddFragmentShader("..\\Data\\Shaders\\Diffuse.frag.shader");
 		m_shaderPrograms[3].LinkProgram();
 		m_shaderPrograms[3].UseProgram();
+	}
+
+	if (m_shaderPrograms[4].Initialize())
+	{					 
+		m_shaderPrograms[4].AddVertexShader("..\\Data\\Shaders\\DiffuseFunctions.vert.shader");
+		m_shaderPrograms[4].AddFragmentShader("..\\Data\\Shaders\\DiffuseFunctions.frag.shader");
+		m_shaderPrograms[4].LinkProgram();
+		m_shaderPrograms[4].UseProgram();
+	}
+
+
+	if (m_shaderPrograms[5].Initialize())
+	{					 
+		m_shaderPrograms[5].AddVertexShader("..\\Data\\Shaders\\Phong.vert.shader");
+		m_shaderPrograms[5].AddFragmentShader("..\\Data\\Shaders\\Phong.frag.shader");
+		m_shaderPrograms[5].LinkProgram();
+		m_shaderPrograms[5].UseProgram();
+	}
+
+
+	if (m_shaderPrograms[6].Initialize())
+	{					 
+		m_shaderPrograms[6].AddVertexShader("..\\Data\\Shaders\\TwoSidedPhong.vert.shader");
+		m_shaderPrograms[6].AddFragmentShader("..\\Data\\Shaders\\TwoSidedPhong.frag.shader");
+		m_shaderPrograms[6].LinkProgram();
+		m_shaderPrograms[6].UseProgram();
+	}
+
+	if (m_shaderPrograms[7].Initialize())
+	{					 
+		m_shaderPrograms[7].AddVertexShader("..\\Data\\Shaders\\FlatPhong.vert.shader");
+		m_shaderPrograms[7].AddFragmentShader("..\\Data\\Shaders\\FlatPhong.frag.shader");
+		m_shaderPrograms[7].LinkProgram();
+		m_shaderPrograms[7].UseProgram();
+	}
+
+	if (m_shaderPrograms[8].Initialize())
+	{					 
+		m_shaderPrograms[8].AddVertexShader("..\\Data\\Shaders\\Subroutine.vert.shader");
+		m_shaderPrograms[8].AddFragmentShader("..\\Data\\Shaders\\Subroutine.frag.shader");
+		m_shaderPrograms[8].LinkProgram();
+		m_shaderPrograms[8].UseProgram();
+	}
+
+	if (m_shaderPrograms[9].Initialize())
+	{					 
+		m_shaderPrograms[9].AddVertexShader("..\\Data\\Shaders\\Discard.vert.shader");
+		m_shaderPrograms[9].AddFragmentShader("..\\Data\\Shaders\\Discard.frag.shader");
+		m_shaderPrograms[9].LinkProgram();
+		m_shaderPrograms[9].UseProgram();
 	}
 
 	debugColorLoc = m_shaderPrograms[0].GetUniformLocation("tint");
 	tintColorLoc = m_shaderPrograms[1].GetUniformLocation("tintColor");
 	tintIntensityLoc = m_shaderPrograms[1].GetUniformLocation("tintIntensity");
 	texLoc = m_shaderPrograms[1].GetUniformLocation("textureSampler");
-	ambientColorLoc = m_shaderPrograms[3].GetUniformLocation("ambientLightColor");
-	ambientIntensityLoc = m_shaderPrograms[3].GetUniformLocation("ambientLightIntensity");
-	diffuseColorLoc = m_shaderPrograms[3].GetUniformLocation("diffuseLightColor");
-	diffuseIntensityLoc = m_shaderPrograms[3].GetUniformLocation("diffuseLightIntensity");
-	specularColorLoc = m_shaderPrograms[3].GetUniformLocation("specularLightColor");
-	specularIntensityLoc = m_shaderPrograms[3].GetUniformLocation("specularLightIntensity");
-	specularPowerLoc = m_shaderPrograms[3].GetUniformLocation("specularPower");
-	modelToWorldMatLoc = m_shaderPrograms[3].GetUniformLocation("modelToWorld");
-	worldToViewMatLoc = m_shaderPrograms[3].GetUniformLocation("worldToView");
-	perspectiveMatLoc = m_shaderPrograms[3].GetUniformLocation("projection");
-	lightLoc = m_shaderPrograms[3].GetUniformLocation("lightPos_WorldSpace");
-	cameraPosLoc = m_shaderPrograms[3].GetUniformLocation("cameraPosition_WorldSpace");
+	ambientColorLoc = m_shaderPrograms[6].GetUniformLocation("ambientLightColor");
+	ambientIntensityLoc = m_shaderPrograms[6].GetUniformLocation("ambientLightIntensity");
+	diffuseColorLoc = m_shaderPrograms[6].GetUniformLocation("diffuseLightColor");
+	diffuseIntensityLoc = m_shaderPrograms[6].GetUniformLocation("diffuseLightIntensity");
+	specularColorLoc = m_shaderPrograms[6].GetUniformLocation("specularLightColor");
+	specularIntensityLoc = m_shaderPrograms[6].GetUniformLocation("specularLightIntensity");
+	specularPowerLoc = m_shaderPrograms[6].GetUniformLocation("specularPower");
+	modelToWorldMatLoc = m_shaderPrograms[6].GetUniformLocation("modelToWorld");
+	worldToViewMatLoc = m_shaderPrograms[6].GetUniformLocation("worldToView");
+	perspectiveMatLoc = m_shaderPrograms[6].GetUniformLocation("projection");
+	lightLoc = m_shaderPrograms[6].GetUniformLocation("lightPos_WorldSpace");
+	cameraPosLoc = m_shaderPrograms[6].GetUniformLocation("cameraPosition_WorldSpace");
+	phongShaderMethodIndex = m_shaderPrograms[8].GetSubroutineIndex(GL_FRAGMENT_SHADER, "PhongModel");
+	diffuseShaderMethodIndex =m_shaderPrograms[8].GetSubroutineIndex(GL_FRAGMENT_SHADER, "DiffuseOnly");
 
 	if (Engine::MyGL::TestForError(Engine::MessageType::cFatal_Error, "InitializeGL errors!"))
 	{

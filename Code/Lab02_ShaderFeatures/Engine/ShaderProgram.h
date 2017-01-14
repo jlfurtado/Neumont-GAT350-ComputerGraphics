@@ -42,7 +42,7 @@ namespace Engine
 		bool LinkAndUseProgram();
 		GLint GetUniformLocation(const GLchar* name);
 		GLint GetAttribLocation(const GLchar* name);
-
+		GLint GetSubroutineIndex(GLenum shaderType, const GLchar* name);
 		GLint GetProgramId() const { return m_id; }
 
 		// shader info methods

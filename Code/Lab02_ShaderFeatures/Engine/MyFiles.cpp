@@ -44,7 +44,7 @@ namespace Engine
 			inputFileStream.close();
 
 			// Don't break because logger buffer too small
-			if (bufferSize > GameLogger::MAX_LOG_SIZE)
+			if (bufferSize > (GameLogger::MAX_LOG_SIZE - 50)) // minus fifty for message itself
 			{
 				GameLogger::Log(MessageType::Error, "MAX_LOG_SIZE of [%d] too small to display contents of file buffer of size [%d]. Log message will not be displayed!!!\n", GameLogger::MAX_LOG_SIZE, bufferSize);
 			}

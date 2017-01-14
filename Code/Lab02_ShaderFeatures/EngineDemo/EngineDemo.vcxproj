@@ -165,6 +165,8 @@
     <None Include="..\Data\Shaders\Diffuse.vert.shader" />
     <None Include="..\Data\Shaders\DiffuseFunctions.frag.shader" />
     <None Include="..\Data\Shaders\DiffuseFunctions.vert.shader" />
+    <None Include="..\Data\Shaders\Discard.frag.shader" />
+    <None Include="..\Data\Shaders\Discard.vert.shader" />
     <None Include="..\Data\Shaders\FlatPhong.frag.shader" />
     <None Include="..\Data\Shaders\FlatPhong.vert.shader" />
     <None Include="..\Data\Shaders\PC.frag.shader" />
@@ -173,6 +175,8 @@
     <None Include="..\Data\Shaders\Phong.frag.shader" />
     <None Include="..\Data\Shaders\PT.frag.shader" />
     <None Include="..\Data\Shaders\PT.vert.shader" />
+    <None Include="..\Data\Shaders\Subroutine.frag.shader" />
+    <None Include="..\Data\Shaders\Subroutine.vert.shader" />
     <None Include="..\Data\Shaders\TwoSidedPhong.frag.shader" />
     <None Include="..\Data\Shaders\TwoSidedPhong.vert.shader" />
   </ItemGroup>

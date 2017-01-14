@@ -42,6 +42,11 @@ namespace Engine
 			glUniform2f(m_uniformDataLoc, *reinterpret_cast<float*>(m_pUniformData), *(reinterpret_cast<float*>(m_pUniformData) + 1));
 			break;
 
+		case GL_VERTEX_SHADER:
+		case GL_FRAGMENT_SHADER:
+			glUniformSubroutinesuiv(m_uniformType, m_uniformDataLoc, reinterpret_cast<GLuint*>(m_pUniformData)); // TODO: IT WORKS BUT ITS NOT READABLE (STUFF BADLY NAMED FOR THIS CASE WHICH IS UGLY ANYWAY)... REFACTOR!!!
+			break;
+
 		default:
 			GameLogger::Log(MessageType::cError, "Unknown uniform data type [%d]!\n", m_uniformType);
 			return false;

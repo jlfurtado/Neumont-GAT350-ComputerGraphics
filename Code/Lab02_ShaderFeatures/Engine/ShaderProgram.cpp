@@ -1,4 +1,5 @@
 #include "ShaderProgram.h"
+#include "ShaderProgram.h"
 #include "GameLogger.h"
 #include "MyGL.h"
 #include "MyFiles.h"
@@ -437,6 +438,26 @@ namespace Engine
 		if (id < 0)
 		{
 			GameLogger::Log(MessageType::cError, "Invalid location returned for attrib [%s]!\n", name);
+		}
+
+		return id;
+	}
+
+	GLint ShaderProgram::GetSubroutineIndex(GLenum shaderType, const GLchar * name)
+	{
+		// ask opengl for the location
+		GLint id = glGetSubroutineIndex(m_id, shaderType, name);
+
+		// see if opengl yelled at us
+		if (MyGL::TestForError(MessageType::cError, "Errors in getting subroutine index"))
+		{
+			GameLogger::Log(MessageType::cError, "Errors detected when getting subroutine index fpr [%s]!\n", name);
+		}
+		
+		// check validity of id
+		if (id < 0)
+		{
+			GameLogger::Log(MessageType::cError, "Invalid subroutine index returned for [%s]!\n", name);
 		}
 
 		return id;

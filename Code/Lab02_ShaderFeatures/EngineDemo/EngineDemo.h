@@ -52,7 +52,7 @@ private:
 	void ShowFrameRate(float dt);
 
 	//data
-	static const int NUM_SHADER_PROGRAMS = 4;
+	static const int NUM_SHADER_PROGRAMS = 10;
 	bool paused = false;
 	Engine::Perspective m_perspective;
 	Engine::TextObject m_fpsTextObject;
@@ -76,6 +76,8 @@ private:
 	GLint specularColorLoc;
 	GLint specularIntensityLoc;
 	GLint specularPowerLoc;
+	GLint phongShaderMethodIndex;
+	GLint diffuseShaderMethodIndex;
 	float m_fpsInterval = 1.0f;
 	bool won = false;
 	float specularPower;
