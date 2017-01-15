@@ -450,7 +450,7 @@ namespace Engine
 	}
 
 
-	bool ShapeGenerator::ReadSceneFile(const char * fileName, GraphicalObject * pObject, GLint shaderProgramID, const char *texturePath, bool cullObject)
+	bool ShapeGenerator::ReadSceneFile(const char * fileName, GraphicalObject * pObject, GLuint shaderProgramID, const char *texturePath, bool cullObject)
 	{
 		Mesh *pSceneMesh = FindMeshBySceneString(fileName, cullObject, shaderProgramID);
 
@@ -658,7 +658,7 @@ namespace Engine
 		return true;
 	}
 
-	Mesh * ShapeGenerator::FindMeshBySceneString(const char * const sceneName, bool cull, int shaderId)
+	Mesh * ShapeGenerator::FindMeshBySceneString(const char * const sceneName, bool cull, unsigned int shaderId)
 	{
 		for (int i = 0; i < s_nextSceneFile; ++i)
 		{

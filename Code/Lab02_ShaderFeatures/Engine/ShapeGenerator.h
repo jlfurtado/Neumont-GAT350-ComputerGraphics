@@ -43,7 +43,7 @@ namespace Engine
 		static bool MakeDebugCube(GraphicalObject *pObject, Vec3 color);
 		static bool MakeDebugArrow(GraphicalObject *pObject, Vec3 topColor, Vec3 sideColor);
 		static bool MakeSphere(GraphicalObject *pObject, Vec3 color);
-		static bool ReadSceneFile(const char *fileName, GraphicalObject *pObject, GLint shaderProgramID, const char *texturePath = nullptr, bool cullObject = true);
+		static bool ReadSceneFile(const char *fileName, GraphicalObject *pObject, GLuint shaderProgramID, const char *texturePath = nullptr, bool cullObject = true);
 
 	private:
 		// methods
@@ -52,7 +52,7 @@ namespace Engine
 		static Mesh *s_sceneMeshes[MAX_SCENE_FILES];
 		static int s_nextSceneFile;
 
-		static Mesh *FindMeshBySceneString(const char *const sceneName, bool cull, int shaderId);
+		static Mesh *FindMeshBySceneString(const char *const sceneName, bool cull, unsigned int shaderId);
 		static bool AddMesh(const char *const sceneName, Mesh *pMeshToAdd);
 		static bool SetupSceneFile(const char *fileName, GLint shaderProgramID, const char *texturePath = nullptr, bool cull = true);
 		static bool SetupSphereMesh(Vec3 color);
