@@ -144,6 +144,7 @@
     <ClInclude Include="GameTime.h" />
     <ClInclude Include="GraphicalObject.h" />
     <ClInclude Include="GraphicalObjectComponent.h" />
+    <ClInclude Include="Keyboard.h" />
     <ClInclude Include="KeyValuePair.h" />
     <ClInclude Include="KeyValuePairs.h" />
     <ClInclude Include="Mat2.h" />
@@ -192,6 +193,7 @@
     <ClCompile Include="GameTime.cpp" />
     <ClCompile Include="GraphicalObject.cpp" />
     <ClCompile Include="GraphicalObjectComponent.cpp" />
+    <ClCompile Include="Keyboard.cpp" />
     <ClCompile Include="KeyValuePair.cpp" />
     <ClCompile Include="KeyValuePairs.cpp" />
     <ClCompile Include="Mat2.cpp" />

@@ -81,7 +81,7 @@ private:
 	float m_fpsInterval = 1.0f;
 	bool won = false;
 	float specularPower;
-	Keyboard keyboardManager;
+	Engine::Keyboard keyboardManager;
 };
 
 #endif // ifndef EngineDemo_H

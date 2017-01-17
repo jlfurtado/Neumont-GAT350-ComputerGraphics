@@ -19,7 +19,7 @@ public:
 
 private:
 	bool HandleKeyboardInput(float dt);
-	Keyboard m_keyboardManager;
+	Engine::Keyboard m_keyboardManager;
 };
 
 #endif // ifndef KEYBOARDCOMPONENT_H

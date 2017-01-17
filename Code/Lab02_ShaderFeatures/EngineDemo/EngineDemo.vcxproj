@@ -153,7 +153,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="EngineDemo.cpp" />
-    <ClCompile Include="Keyboard.cpp" />
     <ClCompile Include="KeyboardComponent.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MouseComponent.cpp" />
@@ -182,7 +181,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EngineDemo.h" />
-    <ClInclude Include="Keyboard.h" />
     <ClInclude Include="KeyboardComponent.h" />
     <ClInclude Include="MouseComponent.h" />
   </ItemGroup>
