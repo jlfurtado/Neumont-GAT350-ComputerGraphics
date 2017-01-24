@@ -57,6 +57,7 @@ private:
 	void PhongDemoSetup();
 	void MultipleLightsSetup();
 	void SpotlightSetup();
+	void CelSetup();
 	void HandleBitKeys(int keyBits);
 
 	//data
@@ -89,6 +90,9 @@ private:
 	GLint phongShaderMethodIndex;
 	GLint diffuseShaderMethodIndex;
 	GLint directionalPositionLoc;
+	GLint levelsLoc;
+	GLint subOneIndex;
+	GLint subTwoIndex;
 	Engine::Vec4 spotlightAttenuations;
 	float m_fpsInterval = 1.0f;
 	bool won = false;

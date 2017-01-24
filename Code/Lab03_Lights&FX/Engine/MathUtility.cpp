@@ -32,6 +32,14 @@ namespace Engine
 		return result;
 	}
 
+	int MathUtility::Clamp(int value, int min, int max)
+	{
+		int result = value;
+		if (result < min) { result = min; }
+		else if (result > max) { result = max; }
+		return result;
+	}
+
 	float MathUtility::Rand(float minValue, float maxValue)
 	{
 		return (rand() * (maxValue - minValue) / RAND_MAX)  + minValue;

@@ -15,7 +15,7 @@ namespace Engine
 	class GameLogger
 	{
 	public:
-		static ENGINE_SHARED const int MAX_LOG_SIZE = 2500;
+		static ENGINE_SHARED const int MAX_LOG_SIZE = 3500;
 		static ENGINE_SHARED bool Initialize(const char *const path, const char *const fileName);
 		static ENGINE_SHARED bool ShutDown();
 
