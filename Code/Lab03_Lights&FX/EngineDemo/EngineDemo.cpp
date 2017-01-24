@@ -38,7 +38,7 @@ const float SCENE_PLANE_SCALE = 10.0f;
 const int NUM_USED_SHADERS = 10;
 const int NUM_NON_TEAPOT_SHADERS = 4;
 const int TEAPOTS_PER_SHADER = 3;
-const int NUM_TEAPOTS = (NUM_USED_SHADERS-NUM_NON_TEAPOT_SHADERS)*TEAPOTS_PER_SHADER;
+const int NUM_TEAPOTS = 50.0f;
 const float TEAPOT_DISTANCE = 35.0f;
 const float ROTATE_DISTANCE = TEAPOT_DISTANCE / 2.5f;
 Engine::GraphicalObject m_grid;
@@ -57,6 +57,9 @@ KeyboardComponent playerInput;
 Engine::Vec3 spotlightDir(0.0f, -1.0f, 0.0f);
 float spotlightAttenuation = 1.0f, spotlightCutoff = Engine::MathUtility::PI / 8.0f;
 int numCelLevels = 4;
+Engine::Vec3 backgroundColor(0.3f, 0.3f, 0.3f);
+Engine::Vec3 planeColor(1.0f);
+float fogMinDist = 100.0f, fogMaxDist = 250.0f;
 
 void EngineDemo::DirectionalDemoSetup()
 {
@@ -66,7 +69,7 @@ void EngineDemo::DirectionalDemoSetup()
 	m_scenePlanes[0].AddPhongUniforms(modelToWorldMatLoc, worldToViewMatLoc, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), perspectiveMatLoc, m_perspective.GetPerspectivePtr()->GetAddress(),
 		tintColorLoc, diffuseColorLoc, ambientColorLoc, specularColorLoc, specularPowerLoc, diffuseIntensityLoc, ambientIntensityLoc, specularIntensityLoc,
 		&m_lights[0].GetMatPtr()->m_materialColor, cameraPosLoc, playerCamera.GetPosPtr(), lightLoc, m_lights[0].GetLocPtr());
-	m_scenePlanes[0].GetMatPtr()->m_materialColor = Engine::Vec3(0.5f, 0.5f, 0.5f);
+	m_scenePlanes[0].GetMatPtr()->m_materialColor = planeColor;
 	m_scenePlanes[0].GetMatPtr()->m_diffuseReflectivity = Engine::Vec3(0.9f, 0.9f, 0.9f);
 	m_scenePlanes[0].GetMatPtr()->m_ambientReflectivity = 0.2f * m_scenePlanes[0].GetMatPtr()->m_diffuseReflectivity;
 	m_scenePlanes[0].GetMatPtr()->m_specularReflectivity = Engine::Vec3(1.0f, 1.0f, 1.0f);
@@ -116,7 +119,7 @@ void EngineDemo::PhongDemoSetup()
 	m_scenePlanes[1].AddPhongUniforms(modelToWorldMatLoc, worldToViewMatLoc, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), perspectiveMatLoc, m_perspective.GetPerspectivePtr()->GetAddress(),
 		tintColorLoc, diffuseColorLoc, ambientColorLoc, specularColorLoc, specularPowerLoc, diffuseIntensityLoc, ambientIntensityLoc, specularIntensityLoc,
 		&m_lights[2].GetMatPtr()->m_materialColor, cameraPosLoc, playerCamera.GetPosPtr(), lightLoc, m_lights[2].GetLocPtr());
-	m_scenePlanes[1].GetMatPtr()->m_materialColor = Engine::Vec3(0.5f, 0.5f, 0.5f);
+	m_scenePlanes[1].GetMatPtr()->m_materialColor = planeColor;
 	m_scenePlanes[1].GetMatPtr()->m_diffuseReflectivity = Engine::Vec3(0.9f, 0.9f, 0.9f);
 	m_scenePlanes[1].GetMatPtr()->m_ambientReflectivity = 0.2f * m_scenePlanes[1].GetMatPtr()->m_diffuseReflectivity;
 	m_scenePlanes[1].GetMatPtr()->m_specularReflectivity = Engine::Vec3(1.0f, 1.0f, 1.0f);
@@ -178,7 +181,7 @@ void EngineDemo::SpotlightSetup()
 	m_scenePlanes[4].AddUniformData(Engine::UniformData(GL_FLOAT, &spotlightAttenuation, ll++));
 	m_scenePlanes[4].AddUniformData(Engine::UniformData(GL_FLOAT, &spotlightCutoff, ll++));
 	m_scenePlanes[4].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, playerCamera.GetPosPtr(), cameraPosLoc));
-	m_scenePlanes[4].GetMatPtr()->m_materialColor = Engine::Vec3(0.5f, 0.5f, 0.5f);
+	m_scenePlanes[4].GetMatPtr()->m_materialColor = planeColor;
 	m_scenePlanes[4].GetMatPtr()->m_diffuseReflectivity = Engine::Vec3(0.9f, 0.9f, 0.9f);
 	m_scenePlanes[4].GetMatPtr()->m_ambientReflectivity = 0.2f * m_scenePlanes[4].GetMatPtr()->m_diffuseReflectivity;
 	m_scenePlanes[4].GetMatPtr()->m_specularReflectivity = Engine::Vec3(1.0f, 1.0f, 1.0f);
@@ -241,7 +244,7 @@ void EngineDemo::CelSetup()
 		tintColorLoc, diffuseColorLoc, ambientColorLoc, specularColorLoc, specularPowerLoc, diffuseIntensityLoc, ambientIntensityLoc, specularIntensityLoc,
 		&m_lights[7].GetMatPtr()->m_materialColor, cameraPosLoc, playerCamera.GetPosPtr(), lightLoc, m_lights[7].GetLocPtr());
 	m_scenePlanes[5].AddUniformData(Engine::UniformData(GL_INT, &numCelLevels, levelsLoc));
-	m_scenePlanes[5].GetMatPtr()->m_materialColor = Engine::Vec3(0.5f, 0.5f, 0.5f);
+	m_scenePlanes[5].GetMatPtr()->m_materialColor = planeColor;
 	m_scenePlanes[5].GetMatPtr()->m_diffuseReflectivity = Engine::Vec3(0.9f, 0.9f, 0.9f);
 	m_scenePlanes[5].GetMatPtr()->m_ambientReflectivity = 0.2f * m_scenePlanes[5].GetMatPtr()->m_diffuseReflectivity;
 	m_scenePlanes[5].GetMatPtr()->m_specularReflectivity = Engine::Vec3(0.0f, 0.0f, 0.0f);
@@ -283,6 +286,61 @@ void EngineDemo::CelSetup()
 	Engine::CollisionTester::AddGraphicalObject(&m_scenePlanes[5]);
 }
 
+void EngineDemo::FogSetup()
+{
+	float offset = 200.0f;
+	Engine::ShapeGenerator::ReadSceneFile("..\\Data\\Scenes\\Ground.PN.Scene", &m_scenePlanes[3], m_shaderPrograms[9].GetProgramId());
+	m_scenePlanes[3].SetTransMat(Engine::Mat4::Translation(Engine::Vec3(-offset, 0.0f, offset)));
+	m_scenePlanes[3].SetScaleMat(Engine::Mat4::Scale(4.0f));
+	m_scenePlanes[3].AddPhongUniforms(modelToWorldMatLoc, worldToViewMatLoc, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), perspectiveMatLoc, m_perspective.GetPerspectivePtr()->GetAddress(),
+		tintColorLoc, diffuseColorLoc, ambientColorLoc, specularColorLoc, specularPowerLoc, diffuseIntensityLoc, ambientIntensityLoc, specularIntensityLoc,
+		&m_lights[8].GetMatPtr()->m_materialColor, cameraPosLoc, playerCamera.GetPosPtr(), lightLoc, m_lights[8].GetLocPtr());
+	m_scenePlanes[3].AddUniformData(Engine::UniformData(GL_FLOAT, &fogMinDist, fogMinLoc));
+	m_scenePlanes[3].AddUniformData(Engine::UniformData(GL_FLOAT, &fogMaxDist, fogMaxLoc));
+	m_scenePlanes[3].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &backgroundColor, fogColorLoc));
+	m_scenePlanes[3].GetMatPtr()->m_materialColor = planeColor;
+	m_scenePlanes[3].GetMatPtr()->m_diffuseReflectivity = Engine::Vec3(0.9f, 0.9f, 0.9f);
+	m_scenePlanes[3].GetMatPtr()->m_ambientReflectivity = 0.2f * m_scenePlanes[3].GetMatPtr()->m_diffuseReflectivity;
+	m_scenePlanes[3].GetMatPtr()->m_specularReflectivity = Engine::Vec3(0.0f, 0.0f, 0.0f);
+	m_scenePlanes[3].GetMatPtr()->m_specularIntensity = 16.0f;
+	Engine::RenderEngine::AddGraphicalObject(&m_scenePlanes[3]);
+
+	for (int i = 10; i < NUM_TEAPOTS; ++i)
+	{
+		Engine::ShapeGenerator::ReadSceneFile("..\\Data\\Scenes\\BetterDargon.PN.Scene", &m_teapots[i], m_shaderPrograms[9].GetProgramId(), nullptr, true);
+		m_teapots[i].SetTransMat(Engine::Mat4::Translation(Engine::Vec3(- offset, (i - 9.5) * 10.0f, offset)));
+		m_teapots[i].SetScaleMat(Engine::Mat4::Scale(2.5f));
+		m_teapots[i].AddPhongUniforms(modelToWorldMatLoc, worldToViewMatLoc, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), perspectiveMatLoc, m_perspective.GetPerspectivePtr()->GetAddress(),
+			tintColorLoc, diffuseColorLoc, ambientColorLoc, specularColorLoc, specularPowerLoc, diffuseIntensityLoc, ambientIntensityLoc, specularIntensityLoc,
+			&m_lights[8].GetMatPtr()->m_materialColor, cameraPosLoc, playerCamera.GetPosPtr(), lightLoc, m_lights[8].GetLocPtr());
+		m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT, &fogMinDist, fogMinLoc));
+		m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT, &fogMaxDist, fogMaxLoc));
+		m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &backgroundColor, fogColorLoc));
+		m_teapots[i].GetMatPtr()->m_materialColor = Engine::Vec3(1.0f, 1.0f, 1.0f);
+		m_teapots[i].GetMatPtr()->m_diffuseReflectivity = Engine::Vec3(0.0f, 0.0f, 0.9f);
+		m_teapots[i].GetMatPtr()->m_ambientReflectivity = 0.2f * m_teapots[i].GetMatPtr()->m_diffuseReflectivity;
+		m_teapots[i].GetMatPtr()->m_specularReflectivity = Engine::Vec3(0.0f, 0.0f, 0.0f);
+		m_teapots[i].GetMatPtr()->m_specularIntensity = 16.0f;
+		Engine::RenderEngine::AddGraphicalObject(&m_teapots[i]);
+	}
+
+	Engine::ShapeGenerator::MakeLightingCube(&m_lights[8]);
+	m_lights[8].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_lights[8].GetFullTransformPtr()->GetAddress(), modelToWorldMatLoc));
+	m_lights[8].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), worldToViewMatLoc));
+	m_lights[8].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_perspective.GetPerspectivePtr()->GetAddress(), perspectiveMatLoc));
+	m_lights[8].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[8].GetMatPtr()->m_materialColor, tintColorLoc));
+	m_lights[8].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[8].GetMatPtr()->m_materialColor, debugColorLoc));
+	m_lights[8].AddUniformData(Engine::UniformData(GL_FLOAT, &m_lights[8].GetMatPtr()->m_specularIntensity, tintIntensityLoc));
+	m_lights[8].SetTransMat(Engine::Mat4::Translation(Engine::Vec3(-offset + 5.0f, 25.0f, offset)));
+	m_lights[8].GetMatPtr()->m_materialColor = Engine::Vec3(1.0f, 1.0f, 1.0f);
+	m_lights[8].GetMatPtr()->m_diffuseReflectivity = Engine::Vec3(1.0f, 1.0f, 1.0f);
+	Engine::RenderEngine::AddGraphicalObject(&m_lights[8]);
+
+
+	Engine::CollisionTester::AddGraphicalObject(&m_lights[8]);
+	Engine::CollisionTester::AddGraphicalObject(&m_scenePlanes[3]);
+}
+
 void EngineDemo::MultipleLightsSetup()
 {
 	float offset = -200.0f;
@@ -309,7 +367,7 @@ void EngineDemo::MultipleLightsSetup()
 	m_scenePlanes[2].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[5].GetMatPtr()->m_materialColor, ll++));
 	m_scenePlanes[2].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, playerCamera.GetPosPtr(), cameraPosLoc));
 
-	m_scenePlanes[2].GetMatPtr()->m_materialColor = Engine::Vec3(0.5f, 0.5f, 0.5f);
+	m_scenePlanes[2].GetMatPtr()->m_materialColor = planeColor;
 	m_scenePlanes[2].GetMatPtr()->m_diffuseReflectivity = Engine::Vec3(0.5f);
 	m_scenePlanes[2].GetMatPtr()->m_ambientReflectivity = 0.2f * m_scenePlanes[2].GetMatPtr()->m_diffuseReflectivity;
 	m_scenePlanes[2].GetMatPtr()->m_specularReflectivity = Engine::Vec3(0.5f);
@@ -430,6 +488,7 @@ bool EngineDemo::Initialize(Engine::MyWindow *window)
 	MultipleLightsSetup();
 	SpotlightSetup();
 	CelSetup();
+	FogSetup();
 
 	Engine::ShapeGenerator::MakeGrid(&m_grid, Engine::CollisionTester::GetGridWidthSections(), Engine::CollisionTester::GetGridHeightSections(), Engine::Vec3(0.5f));
 	Engine::RenderEngine::AddGraphicalObject(&m_grid);
@@ -581,8 +640,6 @@ void EngineDemo::Update(float dt)
 		Engine::CollisionTester::CalculateGrid(); // handle de-selection of light
 	}
 
-	m_lights[6].SetEnabled(true);
-
 	bool isPlane = false;
 	for (int i = 0; i < NUM_SCENES; ++i) { if (rco.m_belongsTo == &m_scenePlanes[i]) { isPlane = true; } }
 	if (rco.m_didIntersect && (isPlane) && s_pSelected)
@@ -593,11 +650,13 @@ void EngineDemo::Update(float dt)
 			Engine::Vec3 direction = Engine::MousePicker::GetDirection(Engine::MouseManager::GetMouseX(), Engine::MouseManager::GetMouseY()).Normalize();
 
 			m_lights[6].SetTransMat(Engine::Mat4::Translation(origin));
-			m_lights[6].SetEnabled(false);
 			spotlightDir = direction;
 		}
 		else { s_pSelected->SetTransMat(Engine::Mat4::Translation(rco.m_intersectionPoint + Engine::Vec3(0.0f, s_pSelected->GetPos().GetY() - rco.m_belongsTo->GetPos().GetY(), 0.0f))); }
 	}
+
+	if (s_pSelected == &m_lights[6]) { m_lights[6].SetEnabled(false); }
+	else { m_lights[6].SetEnabled(true); }
 
 	for (int i = 0; i < NUM_SCENES; ++i){ m_scenePlanes[i].CalcFullTransform(); }
 
@@ -671,7 +730,7 @@ bool EngineDemo::InitializeGL()
 {
 	glViewport(0, 0, m_pWindow->width(), m_pWindow->height());
 
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(backgroundColor.GetX(), backgroundColor.GetY(), backgroundColor.GetZ(), 1.0f);
 
 	glEnable(GL_DEPTH_TEST);
 
@@ -754,8 +813,8 @@ bool EngineDemo::InitializeGL()
 
 	if (m_shaderPrograms[9].Initialize())
 	{					 
-		m_shaderPrograms[9].AddVertexShader("..\\Data\\Shaders\\Discard.vert.shader");
-		m_shaderPrograms[9].AddFragmentShader("..\\Data\\Shaders\\Discard.frag.shader");
+		m_shaderPrograms[9].AddVertexShader("..\\Data\\Shaders\\FogPhong.vert.shader");
+		m_shaderPrograms[9].AddFragmentShader("..\\Data\\Shaders\\FogPhong.frag.shader");
 		m_shaderPrograms[9].LinkProgram();
 		m_shaderPrograms[9].UseProgram();
 	}
@@ -782,6 +841,9 @@ bool EngineDemo::InitializeGL()
 	lightsMin = m_shaderPrograms[6].GetUniformLocation("lights[0].positionEye");
 	spotMin = m_shaderPrograms[7].GetUniformLocation("spotLight.positionEye");
 	levelsLoc = m_shaderPrograms[8].GetUniformLocation("numLevels");
+	fogMinLoc = m_shaderPrograms[9].GetUniformLocation("fog.minDist");
+	fogMaxLoc = m_shaderPrograms[9].GetUniformLocation("fog.maxDist");
+	fogColorLoc = m_shaderPrograms[9].GetUniformLocation("fog.color");
 
 	if (Engine::MyGL::TestForError(Engine::MessageType::cFatal_Error, "InitializeGL errors!"))
 	{

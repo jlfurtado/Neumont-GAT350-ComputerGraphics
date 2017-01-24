@@ -58,6 +58,7 @@ private:
 	void MultipleLightsSetup();
 	void SpotlightSetup();
 	void CelSetup();
+	void FogSetup();
 	void HandleBitKeys(int keyBits);
 
 	//data
@@ -93,6 +94,9 @@ private:
 	GLint levelsLoc;
 	GLint subOneIndex;
 	GLint subTwoIndex;
+	GLint fogMinLoc;
+	GLint fogMaxLoc;
+	GLint fogColorLoc;
 	Engine::Vec4 spotlightAttenuations;
 	float m_fpsInterval = 1.0f;
 	bool won = false;

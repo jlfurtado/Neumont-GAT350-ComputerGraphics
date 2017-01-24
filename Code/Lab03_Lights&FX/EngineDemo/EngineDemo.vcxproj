@@ -172,6 +172,8 @@
     <None Include="..\Data\Shaders\Discard.vert.shader" />
     <None Include="..\Data\Shaders\FlatPhong.frag.shader" />
     <None Include="..\Data\Shaders\FlatPhong.vert.shader" />
+    <None Include="..\Data\Shaders\FogPhong.frag.shader" />
+    <None Include="..\Data\Shaders\FogPhong.vert.shader" />
     <None Include="..\Data\Shaders\MultiplePhong.frag.shader" />
     <None Include="..\Data\Shaders\MultiplePhong.vert.shader" />
     <None Include="..\Data\Shaders\PC.frag.shader" />
