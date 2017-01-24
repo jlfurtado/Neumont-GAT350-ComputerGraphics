@@ -54,6 +54,8 @@ Engine::GraphicalObjectComponent playerGob;
 Engine::SpatialComponent playerSpatial;
 MouseComponent mouseComponent;
 KeyboardComponent playerInput;
+Engine::Vec3 spotlightDir(0.0f, -1.0f, 0.0f);
+float spotlightAttenuation = 1.0f, spotlightCutoff = Engine::MathUtility::PI / 8.0f;
 
 void EngineDemo::DirectionalDemoSetup()
 {
@@ -151,6 +153,81 @@ void EngineDemo::PhongDemoSetup()
 
 	Engine::CollisionTester::AddGraphicalObject(&m_lights[2]);
 	Engine::CollisionTester::AddGraphicalObject(&m_scenePlanes[1]);
+}
+
+void EngineDemo::SpotlightSetup()
+{
+	float offset = 200.0f;
+	Engine::ShapeGenerator::ReadSceneFile("..\\Data\\Scenes\\Ground.PN.Scene", &m_scenePlanes[4], m_shaderPrograms[7].GetProgramId());
+	m_scenePlanes[4].SetTransMat(Engine::Mat4::Translation(Engine::Vec3(0.0f, 0.0f, offset)));
+	m_scenePlanes[4].SetScaleMat(Engine::Mat4::Scale(4.0f));
+	m_scenePlanes[4].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_scenePlanes[4].GetFullTransformPtr(), modelToWorldMatLoc));
+	m_scenePlanes[4].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), worldToViewMatLoc));
+	m_scenePlanes[4].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_perspective.GetPerspectivePtr()->GetAddress(), perspectiveMatLoc));
+	m_scenePlanes[4].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_scenePlanes[4].GetMatPtr()->m_materialColor, tintColorLoc));
+	m_scenePlanes[4].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_scenePlanes[4].GetMatPtr()->m_diffuseReflectivity, diffuseColorLoc));
+	m_scenePlanes[4].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_scenePlanes[4].GetMatPtr()->m_ambientReflectivity, ambientColorLoc));
+	m_scenePlanes[4].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_scenePlanes[4].GetMatPtr()->m_specularReflectivity, specularColorLoc));
+	m_scenePlanes[4].AddUniformData(Engine::UniformData(GL_FLOAT, &m_scenePlanes[4].GetMatPtr()->m_specularIntensity, specularPowerLoc));
+
+	int ll = spotMin;
+	m_scenePlanes[4].AddUniformData(Engine::UniformData(GL_FLOAT_VEC4, m_lights[6].GetLocPtr(), ll++));
+	m_scenePlanes[4].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[6].GetMatPtr()->m_materialColor, ll++));
+	m_scenePlanes[4].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &spotlightDir, ll++));
+	m_scenePlanes[4].AddUniformData(Engine::UniformData(GL_FLOAT, &spotlightAttenuation, ll++));
+	m_scenePlanes[4].AddUniformData(Engine::UniformData(GL_FLOAT, &spotlightCutoff, ll++));
+	m_scenePlanes[4].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, playerCamera.GetPosPtr(), cameraPosLoc));
+	m_scenePlanes[4].GetMatPtr()->m_materialColor = Engine::Vec3(0.5f, 0.5f, 0.5f);
+	m_scenePlanes[4].GetMatPtr()->m_diffuseReflectivity = Engine::Vec3(0.9f, 0.9f, 0.9f);
+	m_scenePlanes[4].GetMatPtr()->m_ambientReflectivity = 0.2f * m_scenePlanes[4].GetMatPtr()->m_diffuseReflectivity;
+	m_scenePlanes[4].GetMatPtr()->m_specularReflectivity = Engine::Vec3(1.0f, 1.0f, 1.0f);
+	m_scenePlanes[4].GetMatPtr()->m_specularIntensity = 16.0f;
+	Engine::RenderEngine::AddGraphicalObject(&m_scenePlanes[4]);
+
+	for (int i = 6; i < 8; ++i)
+	{
+		Engine::ShapeGenerator::ReadSceneFile(i == 6 ? "..\\Data\\Scenes\\Teapot.PN.Scene" : "..\\Data\\Scenes\\BetterDargon.PN.Scene", &m_teapots[i], m_shaderPrograms[7].GetProgramId(), nullptr, true);
+		m_teapots[i].SetTransMat(Engine::Mat4::Translation(Engine::Vec3((i - 6.5f)*30.0f, 0.0f, offset)));
+		m_teapots[i].SetScaleMat(Engine::Mat4::Scale(2.5f));
+		m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_teapots[i].GetFullTransformPtr(), modelToWorldMatLoc));
+		m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), worldToViewMatLoc));
+		m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_perspective.GetPerspectivePtr()->GetAddress(), perspectiveMatLoc));
+		m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_teapots[i].GetMatPtr()->m_materialColor, tintColorLoc));
+		m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_teapots[i].GetMatPtr()->m_diffuseReflectivity, diffuseColorLoc));
+		m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_teapots[i].GetMatPtr()->m_ambientReflectivity, ambientColorLoc));
+		m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_teapots[i].GetMatPtr()->m_specularReflectivity, specularColorLoc));
+		m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT, &m_teapots[i].GetMatPtr()->m_specularIntensity, specularPowerLoc));
+
+		ll = spotMin;
+		m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT_VEC4, m_lights[6].GetLocPtr(), ll++));
+		m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[6].GetMatPtr()->m_materialColor, ll++));
+		m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &spotlightDir, ll++));
+		m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT, &spotlightAttenuation, ll++));
+		m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT, &spotlightCutoff, ll++));
+		m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, playerCamera.GetPosPtr(), cameraPosLoc));
+		m_teapots[i].GetMatPtr()->m_materialColor = Engine::Vec3(1.0f, 1.0f, 1.0f);
+		m_teapots[i].GetMatPtr()->m_diffuseReflectivity = Engine::Vec3(0.0f, 0.0f, 0.9f);
+		m_teapots[i].GetMatPtr()->m_ambientReflectivity = 0.2f * m_teapots[i].GetMatPtr()->m_diffuseReflectivity;
+		m_teapots[i].GetMatPtr()->m_specularReflectivity = Engine::Vec3(1.0f, 1.0f, 1.0f);
+		m_teapots[i].GetMatPtr()->m_specularIntensity = 16.0f;
+		Engine::RenderEngine::AddGraphicalObject(&m_teapots[i]);
+	}
+
+	Engine::ShapeGenerator::MakeLightingCube(&m_lights[6]);
+	m_lights[6].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_lights[6].GetFullTransformPtr()->GetAddress(), modelToWorldMatLoc));
+	m_lights[6].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), worldToViewMatLoc));
+	m_lights[6].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_perspective.GetPerspectivePtr()->GetAddress(), perspectiveMatLoc));
+	m_lights[6].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[6].GetMatPtr()->m_materialColor, tintColorLoc));
+	m_lights[6].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[6].GetMatPtr()->m_materialColor, debugColorLoc));
+	m_lights[6].AddUniformData(Engine::UniformData(GL_FLOAT, &m_lights[6].GetMatPtr()->m_specularIntensity, tintIntensityLoc));
+	m_lights[6].SetTransMat(Engine::Mat4::Translation(Engine::Vec3(5.0f, 35.0f, offset)));
+	m_lights[6].GetMatPtr()->m_materialColor = Engine::Vec3(1.0f, 1.0f, 1.0f);
+	m_lights[6].GetMatPtr()->m_diffuseReflectivity = Engine::Vec3(1.0f, 1.0f, 1.0f);
+	Engine::RenderEngine::AddGraphicalObject(&m_lights[6]);
+
+
+	Engine::CollisionTester::AddGraphicalObject(&m_lights[6]);
+	Engine::CollisionTester::AddGraphicalObject(&m_scenePlanes[4]);
 }
 
 void EngineDemo::MultipleLightsSetup()
@@ -298,6 +375,7 @@ bool EngineDemo::Initialize(Engine::MyWindow *window)
 	DirectionalDemoSetup();
 	PhongDemoSetup();
 	MultipleLightsSetup();
+	SpotlightSetup();
 
 	Engine::ShapeGenerator::MakeGrid(&m_grid, Engine::CollisionTester::GetGridWidthSections(), Engine::CollisionTester::GetGridHeightSections(), Engine::Vec3(0.5f));
 	Engine::RenderEngine::AddGraphicalObject(&m_grid);
@@ -319,7 +397,9 @@ bool EngineDemo::Initialize(Engine::MyWindow *window)
 	}
 
 	// ` for numpad 0
-	if (!keyboardManager.AddKeys("XTWASDRFLGCM QE01234567`9iKN") || !keyboardManager.AddKey(VK_OEM_PERIOD))
+	if (!keyboardManager.AddKeys("XTWASDRFLGCM QE01234567`9iKNJ")
+		|| !keyboardManager.AddKey(VK_OEM_4) || !keyboardManager.AddKey(VK_OEM_6) || !keyboardManager.AddKey(VK_OEM_5)
+		|| !keyboardManager.AddKey(VK_OEM_PERIOD) || !keyboardManager.AddKey(VK_SHIFT))
 	{
 		Engine::GameLogger::Log(Engine::MessageType::cFatal_Error, "Failed to add keys!\n");
 		return false;
@@ -446,11 +526,22 @@ void EngineDemo::Update(float dt)
 		Engine::CollisionTester::CalculateGrid(); // handle de-selection of light
 	}
 
+	m_lights[6].SetEnabled(true);
+
 	bool isPlane = false;
 	for (int i = 0; i < NUM_SCENES; ++i) { if (rco.m_belongsTo == &m_scenePlanes[i]) { isPlane = true; } }
 	if (rco.m_didIntersect && (isPlane) && s_pSelected)
 	{ 
-		s_pSelected->SetTransMat(Engine::Mat4::Translation(rco.m_intersectionPoint + Engine::Vec3(0.0f, s_pSelected->GetPos().GetY() - rco.m_belongsTo->GetPos().GetY(), 0.0f)));
+		if (s_pSelected == &m_lights[6]) 
+		{ 
+			Engine::Vec3 origin = Engine::MousePicker::GetOrigin(Engine::MouseManager::GetMouseX(), Engine::MouseManager::GetMouseY());
+			Engine::Vec3 direction = Engine::MousePicker::GetDirection(Engine::MouseManager::GetMouseX(), Engine::MouseManager::GetMouseY()).Normalize();
+
+			m_lights[6].SetTransMat(Engine::Mat4::Translation(origin));
+			m_lights[6].SetEnabled(false);
+			spotlightDir = direction;
+		}
+		else { s_pSelected->SetTransMat(Engine::Mat4::Translation(rco.m_intersectionPoint + Engine::Vec3(0.0f, s_pSelected->GetPos().GetY() - rco.m_belongsTo->GetPos().GetY(), 0.0f))); }
 	}
 
 	for (int i = 0; i < NUM_SCENES; ++i){ m_scenePlanes[i].CalcFullTransform(); }
@@ -505,6 +596,8 @@ void EngineDemo::OnConfigReload(void * classInstance)
 	{
 		if (pGame->m_fpsInterval < 0.5f) { pGame->m_fpsInterval = 0.5f; }
 	}
+
+	Engine::ConfigReader::pReader->GetFloatsForKey("EngineDemo.Spotlight.AttenuationExponent", 4, pGame->spotlightAttenuations.GetAddress());
 }
 
 //void EngineDemo::PTCallback(Engine::GraphicalObject * instance, void * classInstance)
@@ -590,8 +683,8 @@ bool EngineDemo::InitializeGL()
 
 	if (m_shaderPrograms[7].Initialize())
 	{					 
-		m_shaderPrograms[7].AddVertexShader("..\\Data\\Shaders\\FlatPhong.vert.shader");
-		m_shaderPrograms[7].AddFragmentShader("..\\Data\\Shaders\\FlatPhong.frag.shader");
+		m_shaderPrograms[7].AddVertexShader("..\\Data\\Shaders\\Spotlight.vert.shader");
+		m_shaderPrograms[7].AddFragmentShader("..\\Data\\Shaders\\Spotlight.frag.shader");
 		m_shaderPrograms[7].LinkProgram();
 		m_shaderPrograms[7].UseProgram();
 	}
@@ -632,7 +725,7 @@ bool EngineDemo::InitializeGL()
 	diffuseShaderMethodIndex =m_shaderPrograms[8].GetSubroutineIndex(GL_FRAGMENT_SHADER, "DiffuseOnly");
 	directionalPositionLoc = m_shaderPrograms[3].GetUniformLocation("objectCenterPosition_WorldSpace");
 	lightsMin = m_shaderPrograms[6].GetUniformLocation("lights[0].positionEye");
-	lightsMax = m_shaderPrograms[6].GetUniformLocation("lights[2].intensity");
+	spotMin = m_shaderPrograms[7].GetUniformLocation("spotLight.positionEye");
 
 	if (Engine::MyGL::TestForError(Engine::MessageType::cFatal_Error, "InitializeGL errors!"))
 	{
@@ -659,12 +752,21 @@ bool EngineDemo::ReadConfigValues()
 	if (cameraRotationSpeed < 0.0f) { cameraRotationSpeed = 1.0f; }
 	player.GetComponentByType<Engine::ChaseCameraComponent>()->SetRotateSpeed(cameraRotationSpeed);
 
+	if (!Engine::ConfigReader::pReader->GetFloatsForKey("EngineDemo.Spotlight.AttenuationExponent", 4, spotlightAttenuations.GetAddress()))
+	{
+		Engine::GameLogger::Log(Engine::MessageType::cFatal_Error, "Failed to get floats for key AttenuationExponent!\n"); return false;
+	}
+
+
 	Engine::GameLogger::Log(Engine::MessageType::Process, "Successfully read in config values!\n");
 	return true;
 }
 
 bool EngineDemo::ProcessInput(float dt)
 {
+	static int spotLightIndex = 0;
+	int multiKeyTest[]{ 'J', 'K', VK_OEM_PERIOD };
+	if (keyboardManager.KeysArePressed(&multiKeyTest[0], 3)) { Engine::GameLogger::Log(Engine::MessageType::ConsoleOnly, "3 keys pressed!\n"); }
 	if (keyboardManager.KeyWasPressed('T')) { Engine::GameLogger::Log(Engine::MessageType::ConsoleOnly, "%f\n", dt); }
 	if (keyboardManager.KeyWasReleased('C')) { Engine::CollisionTester::ConsoleLogOutput(); }
 	if (keyboardManager.KeyWasPressed('`')) { Engine::ConfigReader::pReader->ProcessConfigFile(); }
@@ -678,7 +780,14 @@ bool EngineDemo::ProcessInput(float dt)
 	if (keyboardManager.KeyWasPressed('5')) { HandleBitKeys(5); }
 	if (keyboardManager.KeyWasPressed('6')) { HandleBitKeys(6); }
 	if (keyboardManager.KeyWasPressed('7')) { HandleBitKeys(7); }
-	if (keyboardManager.KeyWasPressed(('X'))) { Shutdown(); return false; }
+	float amount = 1.0f;
+	if (keyboardManager.KeyIsDown(VK_SHIFT)) { amount *= 10.0f; }
+	if (keyboardManager.KeyWasPressed(VK_OEM_4)) { spotlightCutoff -= Engine::MathUtility::ToRadians(amount); }
+	if (keyboardManager.KeyWasPressed(VK_OEM_6)) { spotlightCutoff += Engine::MathUtility::ToRadians(amount); }
+	if (keyboardManager.KeyWasPressed(VK_OEM_5)) { spotLightIndex++; spotLightIndex %= 4; spotlightAttenuation = spotlightAttenuations.GetAddress()[spotLightIndex]; }
+
+	if (keyboardManager.KeyWasPressed('X')) { Shutdown(); return false; }
+
 	return true;
 }
 

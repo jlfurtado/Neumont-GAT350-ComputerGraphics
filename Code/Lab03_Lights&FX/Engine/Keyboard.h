@@ -38,6 +38,9 @@ namespace Engine
 		bool KeyWasReleased(int vKey);
 		bool KeyIsDown(int vKey);
 		bool KeyIsUp(int vKey);
+		bool KeysArePressed(int *vKeys, int numKeys);
+		bool KeysAreDown(int *vKeys, int numKeys);
+		bool KeysAreUp(int *vKeys, int numKeys);
 		bool AddToggle(int vKey, bool *pToggle, bool onFirePress = true);
 		void Update(float dt);
 		bool AddKey(int vKey);

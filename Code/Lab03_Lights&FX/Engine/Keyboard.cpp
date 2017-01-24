@@ -40,6 +40,41 @@ namespace Engine
 		return !m_keyStates[vKey].downState;
 	}
 
+	// returns true once when all keys specified enter the down state
+	bool Keyboard::KeysArePressed(int * vKeys, int numKeys)
+	{
+		if (!vKeys || numKeys <= 0) { Engine::GameLogger::Log(Engine::MessageType::cError, "Bad input detected for KeysArePressed!\n"); return false; }
+		bool found = false, total = false; 
+		
+		// iterate through each key, check if any key was pressed this frame and the other keys are down (makes order-irrelevant check - ie 1 held 2 held 3 pressed is the same as 1 pressed 2 held 3 held)
+		for (int i = 0; i < numKeys && !found; ++i)
+		{ 
+			total = KeyWasPressed(*(vKeys + i));
+			for (int j = 0; j < numKeys && total; ++j) { total &= KeyIsDown(*(vKeys + j)); }
+			found |= total;
+		}
+
+		return found;
+	}
+
+	// returns true if every key specified is in the down state, false otherwise
+	bool Keyboard::KeysAreDown(int * vKeys, int numKeys)
+	{
+		if (!vKeys || numKeys <= 0) { Engine::GameLogger::Log(Engine::MessageType::cError, "Bad input detected for KeysAreDown!\n"); return false; }
+		bool found = false;
+		for (int i = 0; i < numKeys; ++i) { found &= KeyIsDown(*(vKeys + i)); }
+		return found;
+	}
+
+	// returns true if every key specified is in the up state, false otherwise
+	bool Keyboard::KeysAreUp(int * vKeys, int numKeys)
+	{
+		if (!vKeys || numKeys <= 0) { Engine::GameLogger::Log(Engine::MessageType::cError, "Bad input detected for KeysAreUp!\n"); return false; }
+		bool found = false;
+		for (int i = 0; i < numKeys; ++i) { found &= KeyIsUp(*(vKeys + i)); }
+		return found;
+	}
+
 	bool Keyboard::AddToggle(int vKey, bool * pToggle, bool onFirePress)
 	{
 		if (vKey < 0 || vKey > MAX_KEY) { Engine::GameLogger::Log(Engine::MessageType::Warning, "Invalid key [%d] was entered for AddToggle!\n", vKey); return false; }

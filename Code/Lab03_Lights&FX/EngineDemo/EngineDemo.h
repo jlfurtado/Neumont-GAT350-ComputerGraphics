@@ -56,6 +56,7 @@ private:
 	void DirectionalDemoSetup();
 	void PhongDemoSetup();
 	void MultipleLightsSetup();
+	void SpotlightSetup();
 	void HandleBitKeys(int keyBits);
 
 	//data
@@ -84,11 +85,11 @@ private:
 	GLint specularIntensityLoc;
 	GLint specularPowerLoc;
 	GLint lightsMin;
-	GLint lightsMax;
+	GLint spotMin;
 	GLint phongShaderMethodIndex;
 	GLint diffuseShaderMethodIndex;
 	GLint directionalPositionLoc;
-
+	Engine::Vec4 spotlightAttenuations;
 	float m_fpsInterval = 1.0f;
 	bool won = false;
 	float specularPower;

@@ -182,6 +182,8 @@
     <None Include="..\Data\Shaders\PhongPhong.vert.shader" />
     <None Include="..\Data\Shaders\PT.frag.shader" />
     <None Include="..\Data\Shaders\PT.vert.shader" />
+    <None Include="..\Data\Shaders\Spotlight.frag.shader" />
+    <None Include="..\Data\Shaders\Spotlight.vert.shader" />
     <None Include="..\Data\Shaders\Subroutine.frag.shader" />
     <None Include="..\Data\Shaders\Subroutine.vert.shader" />
     <None Include="..\Data\Shaders\TwoSidedPhong.frag.shader" />
