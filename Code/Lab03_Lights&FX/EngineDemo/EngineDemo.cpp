@@ -38,7 +38,7 @@ const float SCENE_PLANE_SCALE = 10.0f;
 const int NUM_USED_SHADERS = 10;
 const int NUM_NON_TEAPOT_SHADERS = 4;
 const int TEAPOTS_PER_SHADER = 3;
-const int NUM_TEAPOTS = 50.0f;
+const int NUM_TEAPOTS = 50;
 const float TEAPOT_DISTANCE = 35.0f;
 const float ROTATE_DISTANCE = TEAPOT_DISTANCE / 2.5f;
 Engine::GraphicalObject m_grid;
@@ -308,7 +308,7 @@ void EngineDemo::FogSetup()
 	for (int i = 10; i < NUM_TEAPOTS; ++i)
 	{
 		Engine::ShapeGenerator::ReadSceneFile("..\\Data\\Scenes\\BetterDargon.PN.Scene", &m_teapots[i], m_shaderPrograms[9].GetProgramId(), nullptr, true);
-		m_teapots[i].SetTransMat(Engine::Mat4::Translation(Engine::Vec3(- offset, (i - 9.5) * 10.0f, offset)));
+		m_teapots[i].SetTransMat(Engine::Mat4::Translation(Engine::Vec3(- offset, (i - 9.5f) * 10.0f, offset)));
 		m_teapots[i].SetScaleMat(Engine::Mat4::Scale(2.5f));
 		m_teapots[i].AddPhongUniforms(modelToWorldMatLoc, worldToViewMatLoc, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), perspectiveMatLoc, m_perspective.GetPerspectivePtr()->GetAddress(),
 			tintColorLoc, diffuseColorLoc, ambientColorLoc, specularColorLoc, specularPowerLoc, diffuseIntensityLoc, ambientIntensityLoc, specularIntensityLoc,
