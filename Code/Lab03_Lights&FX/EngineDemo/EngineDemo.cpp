@@ -55,11 +55,11 @@ Engine::SpatialComponent playerSpatial;
 MouseComponent mouseComponent;
 KeyboardComponent playerInput;
 Engine::Vec3 spotlightDir(0.0f, -1.0f, 0.0f);
-float spotlightAttenuation = 1.0f, spotlightCutoff = Engine::MathUtility::PI / 8.0f;
+float spotlightAttenuation = 1.0f, spotlightCutoff = Engine::MathUtility::ToRadians(45.0f);
 int numCelLevels = 4;
 Engine::Vec3 backgroundColor(0.3f, 0.3f, 0.3f);
 Engine::Vec3 planeColor(1.0f);
-float fogMinDist = 100.0f, fogMaxDist = 250.0f;
+float fogMinDist = 70.0f, fogMaxDist = 250.0f;
 
 void EngineDemo::DirectionalDemoSetup()
 {
@@ -100,12 +100,13 @@ void EngineDemo::DirectionalDemoSetup()
 		m_lights[i].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[i].GetMatPtr()->m_materialColor, tintColorLoc));
 		m_lights[i].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[i].GetMatPtr()->m_materialColor, debugColorLoc));
 		m_lights[i].AddUniformData(Engine::UniformData(GL_FLOAT, &m_lights[i].GetMatPtr()->m_specularIntensity, tintIntensityLoc));
-		m_lights[i].SetTransMat(Engine::Mat4::Translation(Engine::Vec3(i*20.0f-5.0f, 15.0f, 5.0f)));
+		m_lights[i].SetTransMat(Engine::Mat4::Translation(Engine::Vec3(i*20.0f-5.0f, 10.0f, 0.0f)));
 		m_lights[i].GetMatPtr()->m_materialColor = Engine::Vec3(1.0f, 1.0f, 1.0f);
 		m_lights[i].GetMatPtr()->m_diffuseReflectivity = Engine::Vec3(1.0f, 1.0f, 1.0f);
 		Engine::RenderEngine::AddGraphicalObject(&m_lights[i]);
 		Engine::CollisionTester::AddGraphicalObject(&m_lights[i]);
 	}	
+
 	m_teapots[1].SetW(0.0f);
 
 }
@@ -133,29 +134,28 @@ void EngineDemo::PhongDemoSetup()
 		m_teapots[i].SetScaleMat(Engine::Mat4::Scale(3.0f));
 		m_teapots[i].AddPhongUniforms(modelToWorldMatLoc, worldToViewMatLoc, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), perspectiveMatLoc, m_perspective.GetPerspectivePtr()->GetAddress(),
 			tintColorLoc, diffuseColorLoc, ambientColorLoc, specularColorLoc, specularPowerLoc, diffuseIntensityLoc, ambientIntensityLoc, specularIntensityLoc,
-			&m_lights[2].GetMatPtr()->m_materialColor, cameraPosLoc, playerCamera.GetPosPtr(), lightLoc, m_lights[2].GetLocPtr());
+			&m_lights[i].GetMatPtr()->m_materialColor, cameraPosLoc, playerCamera.GetPosPtr(), lightLoc, m_lights[i].GetLocPtr());
 		m_teapots[i].GetMatPtr()->m_materialColor = Engine::Vec3(1.0f, 1.0f, 1.0f);
 		m_teapots[i].GetMatPtr()->m_diffuseReflectivity = Engine::Vec3(0.0f, 0.0f, 0.9f);
 		m_teapots[i].GetMatPtr()->m_ambientReflectivity = 0.2f * m_teapots[i].GetMatPtr()->m_diffuseReflectivity;
 		m_teapots[i].GetMatPtr()->m_specularReflectivity = Engine::Vec3(1.0f, 1.0f, 1.0f);
 		m_teapots[i].GetMatPtr()->m_specularIntensity = 16.0f;
 		Engine::RenderEngine::AddGraphicalObject(&m_teapots[i]);
+
+		Engine::ShapeGenerator::MakeLightingCube(&m_lights[i]);
+		m_lights[i].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_lights[i].GetFullTransformPtr()->GetAddress(), modelToWorldMatLoc));
+		m_lights[i].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), worldToViewMatLoc));
+		m_lights[i].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_perspective.GetPerspectivePtr()->GetAddress(), perspectiveMatLoc));
+		m_lights[i].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[i].GetMatPtr()->m_materialColor, tintColorLoc));
+		m_lights[i].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[i].GetMatPtr()->m_materialColor, debugColorLoc));
+		m_lights[i].AddUniformData(Engine::UniformData(GL_FLOAT, &m_lights[i].GetMatPtr()->m_specularIntensity, tintIntensityLoc));
+		m_lights[i].SetTransMat(Engine::Mat4::Translation(Engine::Vec3((i - 2.5f)*20.0f + offset, 15.0f, 5.0f)));
+		m_lights[i].GetMatPtr()->m_materialColor = Engine::Vec3(1.0f, 1.0f, 1.0f);
+		m_lights[i].GetMatPtr()->m_diffuseReflectivity = Engine::Vec3(1.0f, 1.0f, 1.0f);
+		Engine::RenderEngine::AddGraphicalObject(&m_lights[i]);
+		Engine::CollisionTester::AddGraphicalObject(&m_lights[i]);
 	}
 
-	Engine::ShapeGenerator::MakeLightingCube(&m_lights[2]);
-	m_lights[2].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_lights[2].GetFullTransformPtr()->GetAddress(), modelToWorldMatLoc));
-	m_lights[2].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), worldToViewMatLoc));
-	m_lights[2].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_perspective.GetPerspectivePtr()->GetAddress(), perspectiveMatLoc));
-	m_lights[2].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[2].GetMatPtr()->m_materialColor, tintColorLoc));
-	m_lights[2].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[2].GetMatPtr()->m_materialColor, debugColorLoc));
-	m_lights[2].AddUniformData(Engine::UniformData(GL_FLOAT, &m_lights[2].GetMatPtr()->m_specularIntensity, tintIntensityLoc));
-	m_lights[2].SetTransMat(Engine::Mat4::Translation(Engine::Vec3(offset, 15.0f, 5.0f)));
-	m_lights[2].GetMatPtr()->m_materialColor = Engine::Vec3(1.0f, 1.0f, 1.0f);
-	m_lights[2].GetMatPtr()->m_diffuseReflectivity = Engine::Vec3(1.0f, 1.0f, 1.0f);
-	Engine::RenderEngine::AddGraphicalObject(&m_lights[2]);
-
-
-	Engine::CollisionTester::AddGraphicalObject(&m_lights[2]);
 	Engine::CollisionTester::AddGraphicalObject(&m_scenePlanes[1]);
 }
 
@@ -175,8 +175,8 @@ void EngineDemo::SpotlightSetup()
 	m_scenePlanes[4].AddUniformData(Engine::UniformData(GL_FLOAT, &m_scenePlanes[4].GetMatPtr()->m_specularIntensity, specularPowerLoc));
 
 	int ll = spotMin;
-	m_scenePlanes[4].AddUniformData(Engine::UniformData(GL_FLOAT_VEC4, m_lights[6].GetLocPtr(), ll++));
-	m_scenePlanes[4].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[6].GetMatPtr()->m_materialColor, ll++));
+	m_scenePlanes[4].AddUniformData(Engine::UniformData(GL_FLOAT_VEC4, m_lights[7].GetLocPtr(), ll++));
+	m_scenePlanes[4].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[7].GetMatPtr()->m_materialColor, ll++));
 	m_scenePlanes[4].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &spotlightDir, ll++));
 	m_scenePlanes[4].AddUniformData(Engine::UniformData(GL_FLOAT, &spotlightAttenuation, ll++));
 	m_scenePlanes[4].AddUniformData(Engine::UniformData(GL_FLOAT, &spotlightCutoff, ll++));
@@ -203,8 +203,8 @@ void EngineDemo::SpotlightSetup()
 		m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT, &m_teapots[i].GetMatPtr()->m_specularIntensity, specularPowerLoc));
 
 		ll = spotMin;
-		m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT_VEC4, m_lights[6].GetLocPtr(), ll++));
-		m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[6].GetMatPtr()->m_materialColor, ll++));
+		m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT_VEC4, m_lights[7].GetLocPtr(), ll++));
+		m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[7].GetMatPtr()->m_materialColor, ll++));
 		m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &spotlightDir, ll++));
 		m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT, &spotlightAttenuation, ll++));
 		m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT, &spotlightCutoff, ll++));
@@ -217,20 +217,20 @@ void EngineDemo::SpotlightSetup()
 		Engine::RenderEngine::AddGraphicalObject(&m_teapots[i]);
 	}
 
-	Engine::ShapeGenerator::MakeLightingCube(&m_lights[6]);
-	m_lights[6].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_lights[6].GetFullTransformPtr()->GetAddress(), modelToWorldMatLoc));
-	m_lights[6].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), worldToViewMatLoc));
-	m_lights[6].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_perspective.GetPerspectivePtr()->GetAddress(), perspectiveMatLoc));
-	m_lights[6].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[6].GetMatPtr()->m_materialColor, tintColorLoc));
-	m_lights[6].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[6].GetMatPtr()->m_materialColor, debugColorLoc));
-	m_lights[6].AddUniformData(Engine::UniformData(GL_FLOAT, &m_lights[6].GetMatPtr()->m_specularIntensity, tintIntensityLoc));
-	m_lights[6].SetTransMat(Engine::Mat4::Translation(Engine::Vec3(5.0f, 35.0f, offset)));
-	m_lights[6].GetMatPtr()->m_materialColor = Engine::Vec3(1.0f, 1.0f, 1.0f);
-	m_lights[6].GetMatPtr()->m_diffuseReflectivity = Engine::Vec3(1.0f, 1.0f, 1.0f);
-	Engine::RenderEngine::AddGraphicalObject(&m_lights[6]);
+	Engine::ShapeGenerator::MakeLightingCube(&m_lights[7]);
+	m_lights[7].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_lights[7].GetFullTransformPtr()->GetAddress(), modelToWorldMatLoc));
+	m_lights[7].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), worldToViewMatLoc));
+	m_lights[7].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_perspective.GetPerspectivePtr()->GetAddress(), perspectiveMatLoc));
+	m_lights[7].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[7].GetMatPtr()->m_materialColor, tintColorLoc));
+	m_lights[7].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[7].GetMatPtr()->m_materialColor, debugColorLoc));
+	m_lights[7].AddUniformData(Engine::UniformData(GL_FLOAT, &m_lights[7].GetMatPtr()->m_specularIntensity, tintIntensityLoc));
+	m_lights[7].SetTransMat(Engine::Mat4::Translation(Engine::Vec3(5.0f, 35.0f, offset)));
+	m_lights[7].GetMatPtr()->m_materialColor = Engine::Vec3(1.0f, 1.0f, 1.0f);
+	m_lights[7].GetMatPtr()->m_diffuseReflectivity = Engine::Vec3(1.0f, 1.0f, 1.0f);
+	Engine::RenderEngine::AddGraphicalObject(&m_lights[7]);
 
 
-	Engine::CollisionTester::AddGraphicalObject(&m_lights[6]);
+	Engine::CollisionTester::AddGraphicalObject(&m_lights[7]);
 	Engine::CollisionTester::AddGraphicalObject(&m_scenePlanes[4]);
 }
 
@@ -242,7 +242,7 @@ void EngineDemo::CelSetup()
 	m_scenePlanes[5].SetScaleMat(Engine::Mat4::Scale(4.0f));
 	m_scenePlanes[5].AddPhongUniforms(modelToWorldMatLoc, worldToViewMatLoc, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), perspectiveMatLoc, m_perspective.GetPerspectivePtr()->GetAddress(),
 		tintColorLoc, diffuseColorLoc, ambientColorLoc, specularColorLoc, specularPowerLoc, diffuseIntensityLoc, ambientIntensityLoc, specularIntensityLoc,
-		&m_lights[7].GetMatPtr()->m_materialColor, cameraPosLoc, playerCamera.GetPosPtr(), lightLoc, m_lights[7].GetLocPtr());
+		&m_lights[8].GetMatPtr()->m_materialColor, cameraPosLoc, playerCamera.GetPosPtr(), lightLoc, m_lights[8].GetLocPtr());
 	m_scenePlanes[5].AddUniformData(Engine::UniformData(GL_INT, &numCelLevels, levelsLoc));
 	m_scenePlanes[5].GetMatPtr()->m_materialColor = planeColor;
 	m_scenePlanes[5].GetMatPtr()->m_diffuseReflectivity = Engine::Vec3(0.9f, 0.9f, 0.9f);
@@ -258,7 +258,7 @@ void EngineDemo::CelSetup()
 		m_teapots[i].SetScaleMat(Engine::Mat4::Scale(2.5f));
 		m_teapots[i].AddPhongUniforms(modelToWorldMatLoc, worldToViewMatLoc, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), perspectiveMatLoc, m_perspective.GetPerspectivePtr()->GetAddress(),
 			tintColorLoc, diffuseColorLoc, ambientColorLoc, specularColorLoc, specularPowerLoc, diffuseIntensityLoc, ambientIntensityLoc, specularIntensityLoc,
-			&m_lights[7].GetMatPtr()->m_materialColor, cameraPosLoc, playerCamera.GetPosPtr(), lightLoc, m_lights[7].GetLocPtr());
+			&m_lights[8].GetMatPtr()->m_materialColor, cameraPosLoc, playerCamera.GetPosPtr(), lightLoc, m_lights[8].GetLocPtr());
 		m_teapots[i].AddUniformData(Engine::UniformData(GL_INT, &numCelLevels, levelsLoc));
 		m_teapots[i].AddUniformData(Engine::UniformData(GL_FRAGMENT_SHADER, i == 8 ? &subOneIndex : &subTwoIndex, 1));
 		m_teapots[i].GetMatPtr()->m_materialColor = Engine::Vec3(1.0f, 1.0f, 1.0f);
@@ -269,20 +269,20 @@ void EngineDemo::CelSetup()
 		Engine::RenderEngine::AddGraphicalObject(&m_teapots[i]);
 	}
 
-	Engine::ShapeGenerator::MakeLightingCube(&m_lights[7]);
-	m_lights[7].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_lights[7].GetFullTransformPtr()->GetAddress(), modelToWorldMatLoc));
-	m_lights[7].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), worldToViewMatLoc));
-	m_lights[7].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_perspective.GetPerspectivePtr()->GetAddress(), perspectiveMatLoc));
-	m_lights[7].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[7].GetMatPtr()->m_materialColor, tintColorLoc));
-	m_lights[7].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[7].GetMatPtr()->m_materialColor, debugColorLoc));
-	m_lights[7].AddUniformData(Engine::UniformData(GL_FLOAT, &m_lights[7].GetMatPtr()->m_specularIntensity, tintIntensityLoc));
-	m_lights[7].SetTransMat(Engine::Mat4::Translation(Engine::Vec3(offset + 5.0f, 25.0f, offset)));
-	m_lights[7].GetMatPtr()->m_materialColor = Engine::Vec3(1.0f, 1.0f, 1.0f);
-	m_lights[7].GetMatPtr()->m_diffuseReflectivity = Engine::Vec3(1.0f, 1.0f, 1.0f);
-	Engine::RenderEngine::AddGraphicalObject(&m_lights[7]);
+	Engine::ShapeGenerator::MakeLightingCube(&m_lights[8]);
+	m_lights[8].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_lights[8].GetFullTransformPtr()->GetAddress(), modelToWorldMatLoc));
+	m_lights[8].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), worldToViewMatLoc));
+	m_lights[8].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_perspective.GetPerspectivePtr()->GetAddress(), perspectiveMatLoc));
+	m_lights[8].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[8].GetMatPtr()->m_materialColor, tintColorLoc));
+	m_lights[8].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[8].GetMatPtr()->m_materialColor, debugColorLoc));
+	m_lights[8].AddUniformData(Engine::UniformData(GL_FLOAT, &m_lights[8].GetMatPtr()->m_specularIntensity, tintIntensityLoc));
+	m_lights[8].SetTransMat(Engine::Mat4::Translation(Engine::Vec3(offset + 5.0f, 25.0f, offset)));
+	m_lights[8].GetMatPtr()->m_materialColor = Engine::Vec3(1.0f, 1.0f, 1.0f);
+	m_lights[8].GetMatPtr()->m_diffuseReflectivity = Engine::Vec3(1.0f, 1.0f, 1.0f);
+	Engine::RenderEngine::AddGraphicalObject(&m_lights[8]);
 
 
-	Engine::CollisionTester::AddGraphicalObject(&m_lights[7]);
+	Engine::CollisionTester::AddGraphicalObject(&m_lights[8]);
 	Engine::CollisionTester::AddGraphicalObject(&m_scenePlanes[5]);
 }
 
@@ -294,7 +294,7 @@ void EngineDemo::FogSetup()
 	m_scenePlanes[3].SetScaleMat(Engine::Mat4::Scale(4.0f));
 	m_scenePlanes[3].AddPhongUniforms(modelToWorldMatLoc, worldToViewMatLoc, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), perspectiveMatLoc, m_perspective.GetPerspectivePtr()->GetAddress(),
 		tintColorLoc, diffuseColorLoc, ambientColorLoc, specularColorLoc, specularPowerLoc, diffuseIntensityLoc, ambientIntensityLoc, specularIntensityLoc,
-		&m_lights[8].GetMatPtr()->m_materialColor, cameraPosLoc, playerCamera.GetPosPtr(), lightLoc, m_lights[8].GetLocPtr());
+		&m_lights[9].GetMatPtr()->m_materialColor, cameraPosLoc, playerCamera.GetPosPtr(), lightLoc, m_lights[9].GetLocPtr());
 	m_scenePlanes[3].AddUniformData(Engine::UniformData(GL_FLOAT, &fogMinDist, fogMinLoc));
 	m_scenePlanes[3].AddUniformData(Engine::UniformData(GL_FLOAT, &fogMaxDist, fogMaxLoc));
 	m_scenePlanes[3].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &backgroundColor, fogColorLoc));
@@ -312,7 +312,7 @@ void EngineDemo::FogSetup()
 		m_teapots[i].SetScaleMat(Engine::Mat4::Scale(2.5f));
 		m_teapots[i].AddPhongUniforms(modelToWorldMatLoc, worldToViewMatLoc, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), perspectiveMatLoc, m_perspective.GetPerspectivePtr()->GetAddress(),
 			tintColorLoc, diffuseColorLoc, ambientColorLoc, specularColorLoc, specularPowerLoc, diffuseIntensityLoc, ambientIntensityLoc, specularIntensityLoc,
-			&m_lights[8].GetMatPtr()->m_materialColor, cameraPosLoc, playerCamera.GetPosPtr(), lightLoc, m_lights[8].GetLocPtr());
+			&m_lights[9].GetMatPtr()->m_materialColor, cameraPosLoc, playerCamera.GetPosPtr(), lightLoc, m_lights[9].GetLocPtr());
 		m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT, &fogMinDist, fogMinLoc));
 		m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT, &fogMaxDist, fogMaxLoc));
 		m_teapots[i].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &backgroundColor, fogColorLoc));
@@ -322,22 +322,24 @@ void EngineDemo::FogSetup()
 		m_teapots[i].GetMatPtr()->m_specularReflectivity = Engine::Vec3(0.0f, 0.0f, 0.0f);
 		m_teapots[i].GetMatPtr()->m_specularIntensity = 16.0f;
 		Engine::RenderEngine::AddGraphicalObject(&m_teapots[i]);
+		//Engine::CollisionTester::AddGraphicalObject(&m_teapots[i]);
+
 	}
 
-	Engine::ShapeGenerator::MakeLightingCube(&m_lights[8]);
-	m_lights[8].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_lights[8].GetFullTransformPtr()->GetAddress(), modelToWorldMatLoc));
-	m_lights[8].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), worldToViewMatLoc));
-	m_lights[8].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_perspective.GetPerspectivePtr()->GetAddress(), perspectiveMatLoc));
-	m_lights[8].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[8].GetMatPtr()->m_materialColor, tintColorLoc));
-	m_lights[8].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[8].GetMatPtr()->m_materialColor, debugColorLoc));
-	m_lights[8].AddUniformData(Engine::UniformData(GL_FLOAT, &m_lights[8].GetMatPtr()->m_specularIntensity, tintIntensityLoc));
-	m_lights[8].SetTransMat(Engine::Mat4::Translation(Engine::Vec3(-offset + 5.0f, 25.0f, offset)));
-	m_lights[8].GetMatPtr()->m_materialColor = Engine::Vec3(1.0f, 1.0f, 1.0f);
-	m_lights[8].GetMatPtr()->m_diffuseReflectivity = Engine::Vec3(1.0f, 1.0f, 1.0f);
-	Engine::RenderEngine::AddGraphicalObject(&m_lights[8]);
+	Engine::ShapeGenerator::MakeLightingCube(&m_lights[9]);
+	m_lights[9].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_lights[9].GetFullTransformPtr()->GetAddress(), modelToWorldMatLoc));
+	m_lights[9].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), worldToViewMatLoc));
+	m_lights[9].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_perspective.GetPerspectivePtr()->GetAddress(), perspectiveMatLoc));
+	m_lights[9].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[9].GetMatPtr()->m_materialColor, tintColorLoc));
+	m_lights[9].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[9].GetMatPtr()->m_materialColor, debugColorLoc));
+	m_lights[9].AddUniformData(Engine::UniformData(GL_FLOAT, &m_lights[9].GetMatPtr()->m_specularIntensity, tintIntensityLoc));
+	m_lights[9].SetTransMat(Engine::Mat4::Translation(Engine::Vec3(-offset + 5.0f, 25.0f, offset)));
+	m_lights[9].GetMatPtr()->m_materialColor = Engine::Vec3(1.0f, 1.0f, 1.0f);
+	m_lights[9].GetMatPtr()->m_diffuseReflectivity = Engine::Vec3(1.0f, 1.0f, 1.0f);
+	Engine::RenderEngine::AddGraphicalObject(&m_lights[9]);
 
 
-	Engine::CollisionTester::AddGraphicalObject(&m_lights[8]);
+	Engine::CollisionTester::AddGraphicalObject(&m_lights[9]);
 	Engine::CollisionTester::AddGraphicalObject(&m_scenePlanes[3]);
 }
 
@@ -359,12 +361,12 @@ void EngineDemo::MultipleLightsSetup()
 	m_scenePlanes[2].AddUniformData(Engine::UniformData(GL_FLOAT, &m_scenePlanes[2].GetMatPtr()->m_specularIntensity, specularPowerLoc));
 
 	int ll = lightsMin;
-	m_scenePlanes[2].AddUniformData(Engine::UniformData(GL_FLOAT_VEC4, m_lights[3].GetLocPtr(), ll++));
-	m_scenePlanes[2].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[3].GetMatPtr()->m_materialColor, ll++));
 	m_scenePlanes[2].AddUniformData(Engine::UniformData(GL_FLOAT_VEC4, m_lights[4].GetLocPtr(), ll++));
 	m_scenePlanes[2].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[4].GetMatPtr()->m_materialColor, ll++));
 	m_scenePlanes[2].AddUniformData(Engine::UniformData(GL_FLOAT_VEC4, m_lights[5].GetLocPtr(), ll++));
 	m_scenePlanes[2].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[5].GetMatPtr()->m_materialColor, ll++));
+	m_scenePlanes[2].AddUniformData(Engine::UniformData(GL_FLOAT_VEC4, m_lights[6].GetLocPtr(), ll++));
+	m_scenePlanes[2].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[6].GetMatPtr()->m_materialColor, ll++));
 	m_scenePlanes[2].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, playerCamera.GetPosPtr(), cameraPosLoc));
 
 	m_scenePlanes[2].GetMatPtr()->m_materialColor = planeColor;
@@ -391,12 +393,12 @@ void EngineDemo::MultipleLightsSetup()
 	m_teapots[5].AddUniformData(Engine::UniformData(GL_FLOAT, &m_teapots[5].GetMatPtr()->m_specularIntensity, specularPowerLoc));
 	
 	ll = lightsMin;
-	m_teapots[5].AddUniformData(Engine::UniformData(GL_FLOAT_VEC4, m_lights[3].GetLocPtr(), ll++));
-	m_teapots[5].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[3].GetMatPtr()->m_materialColor, ll++));
 	m_teapots[5].AddUniformData(Engine::UniformData(GL_FLOAT_VEC4, m_lights[4].GetLocPtr(), ll++));
 	m_teapots[5].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[4].GetMatPtr()->m_materialColor, ll++));
 	m_teapots[5].AddUniformData(Engine::UniformData(GL_FLOAT_VEC4, m_lights[5].GetLocPtr(), ll++));
 	m_teapots[5].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[5].GetMatPtr()->m_materialColor, ll++));
+	m_teapots[5].AddUniformData(Engine::UniformData(GL_FLOAT_VEC4, m_lights[6].GetLocPtr(), ll++));
+	m_teapots[5].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[6].GetMatPtr()->m_materialColor, ll++));
 	m_teapots[5].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, playerCamera.GetPosPtr(), cameraPosLoc));
 
 	m_teapots[5].GetMatPtr()->m_materialColor = Engine::Vec3(1.0f, 1.0f, 1.0f);
@@ -406,7 +408,7 @@ void EngineDemo::MultipleLightsSetup()
 	m_teapots[5].GetMatPtr()->m_specularIntensity = 32.0f;
 	Engine::RenderEngine::AddGraphicalObject(&m_teapots[5]);
 
-	for (int i = 3; i < 6; ++i)
+	for (int i = 4; i < 7; ++i)
 	{
 		Engine::ShapeGenerator::MakeLightingCube(&m_lights[i]);
 		m_lights[i].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_lights[i].GetFullTransformPtr()->GetAddress(), modelToWorldMatLoc));
@@ -424,7 +426,7 @@ void EngineDemo::MultipleLightsSetup()
 		m_lights[i].SetRotationAxis(xyz);
 		Engine::Vec3 rot(xyz.GetY(), xyz.GetZ(), xyz.GetX());
 		m_lights[i].SetTransMat(Engine::Mat4::Translation(Engine::Vec3(i*TEAPOT_DISTANCE - TEAPOT_DISTANCE, 0.0f, 0.0f) + (rot.Normalize() * ROTATE_DISTANCE)));
-		m_lights[i].SetRotationRate(Engine::MathUtility::PI / 10.0f);
+		m_lights[i].SetRotationRate(0.0f);
 
 		Engine::RenderEngine::AddGraphicalObject(&m_lights[i]);
 	}
@@ -605,7 +607,7 @@ void EngineDemo::Update(float dt)
 
 	for (int i = 0; i < NUM_TEAPOTS; ++i)
 	{
-		if (i >= 3 && i <= 5)
+		if (i >= 4 && i <= 6)
 		{
 			Engine::Vec3 xyz = Engine::Vec3(i % 3 == 2 ? 1.0f : 0.0f,
 				i % 3 == 0 ? 1.0f : 0.0f,
@@ -644,24 +646,19 @@ void EngineDemo::Update(float dt)
 	for (int i = 0; i < NUM_SCENES; ++i) { if (rco.m_belongsTo == &m_scenePlanes[i]) { isPlane = true; } }
 	if (rco.m_didIntersect && (isPlane) && s_pSelected)
 	{ 
-		if (s_pSelected == &m_lights[6]) 
+		if (s_pSelected == &m_lights[7]) 
 		{ 
 			Engine::Vec3 origin = Engine::MousePicker::GetOrigin(Engine::MouseManager::GetMouseX(), Engine::MouseManager::GetMouseY());
 			Engine::Vec3 direction = Engine::MousePicker::GetDirection(Engine::MouseManager::GetMouseX(), Engine::MouseManager::GetMouseY()).Normalize();
 
-			m_lights[6].SetTransMat(Engine::Mat4::Translation(origin));
+			m_lights[7].SetTransMat(Engine::Mat4::Translation(origin));
 			spotlightDir = direction;
 		}
 		else { s_pSelected->SetTransMat(Engine::Mat4::Translation(rco.m_intersectionPoint + Engine::Vec3(0.0f, s_pSelected->GetPos().GetY() - rco.m_belongsTo->GetPos().GetY(), 0.0f))); }
 	}
 
-	if (s_pSelected == &m_lights[6]) { m_lights[6].SetEnabled(false); }
-	else { m_lights[6].SetEnabled(true); }
-
+	m_lights[7].SetEnabled(s_pSelected != &m_lights[7]); 
 	for (int i = 0; i < NUM_SCENES; ++i){ m_scenePlanes[i].CalcFullTransform(); }
-
-
-
 }
 
 void EngineDemo::Draw()
@@ -924,9 +921,9 @@ bool EngineDemo::ProcessInput(float dt)
 	return true;
 }
 
-const int xBit = 4, xIndex = 3;
-const int yBit = 2, yIndex = 4;
-const int zBit = 1, zIndex = 5;
+const int xBit = 4, xIndex = 4;
+const int yBit = 2, yIndex = 5;
+const int zBit = 1, zIndex = 6;
 void EngineDemo::HandleBitKeys(int keyBits)
 {
 	m_lights[xIndex].SetRotationRate((keyBits & xBit) != 0 ? Engine::MathUtility::PI / 10.0f : 0.0f);
