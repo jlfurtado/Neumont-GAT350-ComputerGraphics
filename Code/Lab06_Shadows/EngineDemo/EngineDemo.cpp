@@ -771,5 +771,6 @@ bool EngineDemo::UglyDemoCode()
 		m_demoObjects[i].GetMatPtr()->m_specularIntensity = 16.0f;
 		Engine::RenderEngine::AddGraphicalObject(&m_demoObjects[i]);
 	}
+	return true;
 }
 

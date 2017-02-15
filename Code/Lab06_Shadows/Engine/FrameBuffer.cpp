@@ -170,7 +170,7 @@ namespace Engine
 		height = h;
 
 		// set stuff outside the border to this value to make everything fully lit for shadow maps
-		GLfloat border[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+		GLfloat border[] = { 1.0f, 0.0f, 0.0f, 0.0f };
 		
 		// make the texture
 		glGenTextures(1, &renderTextureId);
