@@ -103,4 +103,10 @@ namespace Engine
 		return normal;
 	}
 
+	float MathUtility::GetVectorAngleRadians(const Vec3& left, const Vec3& right)
+	{
+		return acosf(left.Normalize().Dot(right.Normalize()));
+	}
+	
+
 }

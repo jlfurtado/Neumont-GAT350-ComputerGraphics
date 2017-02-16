@@ -53,6 +53,7 @@ private:
 	bool ProcessInput(float dt);
 	void ShowFrameRate(float dt);
 	bool UglyDemoCode();
+	void SwapFrameBuffers();
 
 	//data
 	static const int NUM_SHADER_PROGRAMS = 10;
@@ -87,6 +88,7 @@ private:
 	GLint levelsLoc;
 	GLint subOneIndex;
 	GLint subTwoIndex;
+	GLint subThreeIndex;
 	GLint fogMinLoc;
 	GLint fogMaxLoc;
 	GLint fogColorLoc;

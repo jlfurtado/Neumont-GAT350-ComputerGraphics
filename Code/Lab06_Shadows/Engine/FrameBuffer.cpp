@@ -163,7 +163,7 @@ namespace Engine
 	}
 
 	const GLenum  internalFormatDepth = GL_DEPTH_COMPONENT24;
-	bool FrameBuffer::InitializeForDepth(int w, int h)
+	bool FrameBuffer::InitializeForDepth(int w, int h, bool nearest)
 	{
 		// store the width and height
 		width = w;
@@ -203,8 +203,8 @@ namespace Engine
 		}
 
 		// set parameters
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, nearest ? GL_NEAREST : GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, nearest ? GL_NEAREST : GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border);

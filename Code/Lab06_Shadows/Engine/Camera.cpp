@@ -1,4 +1,5 @@
 #include "Camera.h"
+#include "Camera.h"
 #include "GameLogger.h"
 #include "MathUtility.h"
 
@@ -120,6 +121,11 @@ namespace Engine
 	void Camera::SetPosition(Vec3 newPosition)
 	{
 		m_position = newPosition;
+	}
+
+	Mat4 Camera::GetRotMat()
+	{
+		return Engine::Mat4::RotationAroundAxis(Engine::Vec3(0.0f, 0.0, 1.0f).Cross(m_viewDirection), Engine::MathUtility::GetVectorAngleRadians(Engine::Vec3(0.0f, 0.0f, 1.0f), m_viewDirection));
 	}
 
 	float Camera::WrapAngle(float angleToWrap)

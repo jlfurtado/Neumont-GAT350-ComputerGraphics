@@ -18,7 +18,7 @@ namespace Engine
 		~FrameBuffer();
 
 		bool InitializeForTexture(int width, int height);
-		bool InitializeForDepth(int width, int height);
+		bool InitializeForDepth(int width, int height, bool nearest);
 		void Bind();
 		void UnBind(int viewX, int viewY, int viewWidth, int viewHeight);
 		GLuint * GetTexIdPtr();

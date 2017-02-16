@@ -10,6 +10,7 @@
 #include "Mesh.h"
 #include "Vertex.h"
 #include "ColorVertex.h"
+#include "Mat4.h"
 
 namespace Engine
 {
@@ -32,6 +33,7 @@ namespace Engine
 		static bool Shutdown();
 
 		// methods
+		static bool MakeFrustum(GraphicalObject *pObject, float near, float far, float aspect, float fovy);
 		static bool MakeNormalCube(GraphicalObject *pObject);
 		static bool MakeHorizontalPlane(GraphicalObject *pObject, Vec3 upperLeft, Vec3 lowerRight, Vec3 color);
 		static bool MakeLightingCube(GraphicalObject *pObject);
@@ -59,6 +61,7 @@ namespace Engine
 		static bool AddMesh(const char *const sceneName, Mesh *pMeshToAdd);
 		static bool SetupSceneFile(const char *fileName, GLint shaderProgramID, const char *texturePath = nullptr, bool cull = true);
 		static bool SetupSphereMesh(Vec3 color);
+		static bool SetupFrustum(float near, float far, float aspect, float fovy);
 		static bool SetupHorizontalPlane(Vec3 upperLeft, Vec3 lowerRight);
 		static Mesh SetupSphere(Vec3 color);
 		static int  GenerateSphere(Facet3* facets, int iterations);
@@ -118,6 +121,11 @@ namespace Engine
 		static GLuint debugArrowIndices[DEBUG_ARROW_INDEX_COUNT];
 		static const int DEBUG_ARROW_SPLIT_VERTEX = 14; // 7 for top and bottom, then 14 for sides
 
+		static const int FRUSTUM_VERTEX_COUNT = 8;
+		static Vec3 frustumVerts[FRUSTUM_VERTEX_COUNT];
+		static const int FRUSTUM_INDEX_COUNT = 24;
+		static GLuint frustumIndices[FRUSTUM_INDEX_COUNT];
+
 		static Mesh debugCubeMesh;
 		static Mesh gridMesh;
 		static Mesh cubeMesh;
@@ -128,6 +136,7 @@ namespace Engine
 		static Mesh sphereMesh;
 		static Mesh horizontalPlaneMesh;
 		static Mesh normalCubeMesh;
+		static Mesh frustumMesh;
 	};
 }
 

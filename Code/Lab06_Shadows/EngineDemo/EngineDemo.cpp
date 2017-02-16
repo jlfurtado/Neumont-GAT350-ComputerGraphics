@@ -35,7 +35,8 @@
 // EngineDemo.cpp
 // The game
 
-const float LIGHT_HEIGHT = 25.0f;
+const int NUM_DARGONS = 16;
+const float LIGHT_HEIGHT = 35.0f;
 const float degreesPerSecond = 10.0f;
 const int NUM_SCENES = 6;
 const float SCENE_PLANE_SCALE = 10.0f;
@@ -68,12 +69,14 @@ float fogMinDist = 70.0f, fogMaxDist = 250.0f;
 int mossTexID;
 int alphaTexID;
 
-const int framebufferWidth = 1024;
-const int framebufferHeight = 1024;
+const int framebufferWidth = 2048;
+const int framebufferHeight = 2048;
 const float framebufferAspect = framebufferWidth * 1.0f / framebufferHeight;
 Engine::Mat4 framebufferLookAt;
 Engine::Mat4 framebufferPerspective;
-Engine::FrameBuffer framebuffer;
+Engine::FrameBuffer nearestBuffer;
+Engine::FrameBuffer linearBuffer;
+Engine::FrameBuffer *pCurrentBuffer;
 int whiteSquareId = 0;
 Engine::GraphicalObject framebufferCamera;
 Engine::Camera fbCam;
@@ -109,6 +112,8 @@ int explodeDistLoc;
 
 Engine::Mat4 shadowMatrix;
 int shadowMatrixLoc;
+
+int bufferTexID;
 
 bool EngineDemo::Initialize(Engine::MyWindow *window)
 {
@@ -288,13 +293,17 @@ void EngineDemo::Update(float dt)
 	}
 
 	for (int i = 0; i < NUM_SCENES; ++i){ m_scenePlanes[i].CalcFullTransform(); }
-	framebufferCamera.CalcFullTransform();
+
+
 
 	static float error = 0.0f;
 	error += 25.0f * dt;
 	if (error > 1.0f) { error -= 1.0f; 	fbCam.MouseRotate(1, 0);}
 
 	fbCam.SetPosition(m_lights[0].GetPos());
+	m_demoObjects[NUM_DARGONS].SetTransMat(Engine::Mat4::Translation(m_lights[0].GetPos()));
+	m_demoObjects[NUM_DARGONS].SetRotMat(fbCam.GetRotMat());
+	m_demoObjects[NUM_DARGONS].CalcFullTransform();
 
 	framebufferLookAt = fbCam.GetWorldToViewMatrix();
 
@@ -314,7 +323,7 @@ void EngineDemo::Draw()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// bind the framebuffer
-	framebuffer.Bind();
+	pCurrentBuffer->Bind();
 
 	// record depth only for these draw calls
 	int prev = subTwoIndex;
@@ -324,7 +333,7 @@ void EngineDemo::Draw()
 
 	Engine::RenderEngine::DrawSingleObjectDifferently(&m_scenePlanes[0], framebufferPerspective.GetAddress(), framebufferLookAt.GetAddress(), nullptr, worldToViewMatLoc, perspectiveMatLoc, texLoc);
 
-	for (int i = 0; i < 8; ++i)
+	for (int i = 0; i < NUM_DARGONS; ++i)
 	{
 		Engine::RenderEngine::DrawSingleObjectDifferently(&m_demoObjects[i], framebufferPerspective.GetAddress(), framebufferLookAt.GetAddress(), nullptr, worldToViewMatLoc, perspectiveMatLoc, texLoc);
 	}
@@ -335,7 +344,7 @@ void EngineDemo::Draw()
 	subTwoIndex = prev;
 
 	// restore stuff
-	framebuffer.UnBind(0, 0, m_pWindow->width(), m_pWindow->height());
+	pCurrentBuffer->UnBind(0, 0, m_pWindow->width(), m_pWindow->height());
 	
 	// draw regular stuff
 	Engine::RenderEngine::Draw();
@@ -518,6 +527,7 @@ bool EngineDemo::InitializeGL()
 	cameraPosLoc = m_shaderPrograms[4].GetUniformLocation("cameraPosition_WorldSpace");
 	subOneIndex = m_shaderPrograms[3].GetSubroutineIndex(GL_FRAGMENT_SHADER, "RecordDepth");
 	subTwoIndex = m_shaderPrograms[3].GetSubroutineIndex(GL_FRAGMENT_SHADER, "PhongWithShadow");
+	subThreeIndex = m_shaderPrograms[3].GetSubroutineIndex(GL_FRAGMENT_SHADER, "PhongWithShadowAverage");
 	//directionalPositionLoc = m_shaderPrograms[3].GetUniformLocation("objectCenterPosition_WorldSpace");
 	//lightsMin = m_shaderPrograms[6].GetUniformLocation("lights[0].positionEye");
 	spotMin = m_shaderPrograms[7].GetUniformLocation("spotLight.positionEye");
@@ -587,7 +597,7 @@ bool EngineDemo::ProcessInput(float dt)
 	static bool specToggle = false;
 	
 	float lineDelta = 1.0f;
-
+	static void *pSubIndex = &subTwoIndex;
 
 	int multiKeyTest[]{ 'J', 'K', VK_OEM_PERIOD };
 	if (keyboardManager.KeysArePressed(&multiKeyTest[0], 3)) { Engine::GameLogger::Log(Engine::MessageType::ConsoleOnly, "3 keys pressed!\n"); }
@@ -602,6 +612,20 @@ bool EngineDemo::ProcessInput(float dt)
 	if (keyboardManager.KeyWasPressed('J')) { lineWidth = Engine::MathUtility::Clamp(lineWidth + lineDelta, 0.0f, 6.0f); }
 	if (keyboardManager.KeyWasPressed('1')) { explodeDist += 1.0f; }
 	if (keyboardManager.KeyWasPressed('2')) { explodeDist -= 1.0f; }
+	if (keyboardManager.KeyWasPressed('3')) 
+	{
+		if (pSubIndex == &subTwoIndex) { pSubIndex = &subThreeIndex; }
+		else { pSubIndex = &subTwoIndex; }
+
+		for (int i = 0; i < NUM_DARGONS; ++i)
+		{
+			*m_demoObjects[i].GetUniformDataPtrPtrByLoc(1) = pSubIndex; 
+		}
+
+		*m_scenePlanes[0].GetUniformDataPtrPtrByLoc(1) = pSubIndex;
+	}
+
+	if (keyboardManager.KeyWasPressed('4')) { SwapFrameBuffers(); }
 
 	//if (keyboardManager.KeyWasPressed('0')) { HandleBitKeys(0); }
 	//if (keyboardManager.KeyWasPressed('2')) { HandleBitKeys(2); }
@@ -653,6 +677,9 @@ void EngineDemo::ShowFrameRate(float dt)
 	}
 }
 
+
+const float dargonSpacing = 65.0f;
+
 bool EngineDemo::UglyDemoCode()
 {
 	player.SetName("Player");
@@ -682,6 +709,7 @@ bool EngineDemo::UglyDemoCode()
 	player.AddComponent(&playerInput, "PlayerInput");
 	player.AddComponent(&mouseComponent, "MouseComponent");
 	player.Initialize();
+
 	player.GetComponentByType<Engine::SpatialComponent>()->SetPosition(Engine::Vec3(375.0f, 5.0f, 5.0f));
 	if (!Engine::TextObject::Initialize(matLoc, tintColorLoc))
 	{
@@ -695,12 +723,16 @@ bool EngineDemo::UglyDemoCode()
 	m_perspective.SetScreenDimmensions(static_cast<float>(m_pWindow->width()), static_cast<float>(m_pWindow->height()));
 	Engine::MousePicker::SetPerspectiveInfo(m_perspective.GetFOVY(), m_perspective.GetNearDist(), m_perspective.GetWidth(), m_perspective.GetHeight());
 
-	if (!framebuffer.InitializeForDepth(framebufferWidth, framebufferHeight)) { return false; }
+	if (!nearestBuffer.InitializeForDepth(framebufferWidth, framebufferHeight, true)) { return false; }
+	if (!linearBuffer.InitializeForDepth(framebufferWidth, framebufferHeight, false)) { return false; }
 	Engine::Perspective p;
-	p.SetPerspective(framebufferAspect, Engine::MathUtility::ToRadians(90.0f), 1.0f, RENDER_DISTANCE);
+	p.SetPerspective(framebufferAspect, Engine::MathUtility::ToRadians(60.0f), 1.0f, RENDER_DISTANCE);
 	framebufferPerspective = p.GetPerspective();
 	fbCam.SetPosition(Engine::Vec3(0.0f, LIGHT_HEIGHT, 0.0f));
-	fbCam.MouseRotate(0, 60);
+	fbCam.MouseRotate(0, 00);
+
+	pCurrentBuffer = &nearestBuffer;
+	bufferTexID = *pCurrentBuffer->GetTexIdPtr();
 
 	/*Engine::ShapeGenerator::MakeSphere(&framebufferCamera, Engine::Vec3(0.0f, 1.0f, 0.0f));
 	framebufferCamera.SetTransMat(Engine::Mat4::Translation(fbCam.GetPosition()));
@@ -736,12 +768,12 @@ bool EngineDemo::UglyDemoCode()
 
 	Engine::ShapeGenerator::ReadSceneFile("..\\Data\\Scenes\\Ground.PN.Scene", &m_scenePlanes[0], m_shaderPrograms[3].GetProgramId());
 	m_scenePlanes[0].SetTransMat(Engine::Mat4::Translation(Engine::Vec3(0.0f, 0.0f, 0.0f)));
-	m_scenePlanes[0].SetScaleMat(Engine::Mat4::Scale(4.0f));
+	m_scenePlanes[0].SetScaleMat(Engine::Mat4::Scale(40.0f));
 	m_scenePlanes[0].AddPhongUniforms(modelToWorldMatLoc, worldToViewMatLoc, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), perspectiveMatLoc, m_perspective.GetPerspectivePtr()->GetAddress(),
 		tintColorLoc, diffuseColorLoc, ambientColorLoc, specularColorLoc, specularPowerLoc, diffuseIntensityLoc, ambientIntensityLoc, specularIntensityLoc,
 		&m_lights[2].GetMatPtr()->m_materialColor, cameraPosLoc, playerCamera.GetPosPtr(), lightLoc, m_lights[0].GetLocPtr());
 	m_scenePlanes[0].AddUniformData(Engine::UniformData(GL_FRAGMENT_SHADER, &subTwoIndex, 1));
-	m_scenePlanes[0].AddUniformData(Engine::UniformData(GL_TEXTURE0, framebuffer.GetTexIdPtr(), brickLoc));
+	m_scenePlanes[0].AddUniformData(Engine::UniformData(GL_TEXTURE0, &bufferTexID, brickLoc));
 	m_scenePlanes[0].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, &shadowMatrix, shadowMatrixLoc));
 
 	m_scenePlanes[0].GetMatPtr()->m_materialColor = planeColor;
@@ -752,16 +784,17 @@ bool EngineDemo::UglyDemoCode()
 	Engine::RenderEngine::AddGraphicalObject(&m_scenePlanes[0]);
 	Engine::CollisionTester::AddGraphicalObject(&m_scenePlanes[0]);
 
-	for (int i = 0; i < 8; ++i)
+	
+	for (int i = 0; i < NUM_DARGONS; ++i)
 	{
 		Engine::ShapeGenerator::ReadSceneFile("..\\Data\\Scenes\\BetterDargon.PN.Scene", &m_demoObjects[i], m_shaderPrograms[3].GetProgramId(), nullptr, true);
-		m_demoObjects[i].SetTransMat(Engine::Mat4::Translation(Engine::Vec3((i%4 - 1.5f)*30.0f, 10.0f, (i/4-0.5f)*30.0f)));
+		m_demoObjects[i].SetTransMat(Engine::Mat4::Translation(Engine::Vec3((i%4 - 1.5f)*dargonSpacing, 10.0f, (i/4-0.5f)*dargonSpacing)));
 		m_demoObjects[i].SetScaleMat(Engine::Mat4::Scale(1.5f));
 		m_demoObjects[i].AddPhongUniforms(modelToWorldMatLoc, worldToViewMatLoc, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), perspectiveMatLoc, m_perspective.GetPerspectivePtr()->GetAddress(),
 			tintColorLoc, diffuseColorLoc, ambientColorLoc, specularColorLoc, specularPowerLoc, diffuseIntensityLoc, ambientIntensityLoc, specularIntensityLoc,
 			&m_lights[0].GetMatPtr()->m_materialColor, cameraPosLoc, playerCamera.GetPosPtr(), lightLoc, m_lights[0].GetLocPtr());
 		m_demoObjects[i].AddUniformData(Engine::UniformData(GL_FRAGMENT_SHADER, &subTwoIndex, 1));
-		m_demoObjects[i].AddUniformData(Engine::UniformData(GL_TEXTURE0, framebuffer.GetTexIdPtr(), brickLoc));
+		m_demoObjects[i].AddUniformData(Engine::UniformData(GL_TEXTURE0, &bufferTexID, brickLoc));
 		m_demoObjects[i].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, &shadowMatrix, shadowMatrixLoc, true));
 
 		m_demoObjects[i].GetMatPtr()->m_materialColor = Engine::Vec3(1.0f, 1.0f, 1.0f);
@@ -771,6 +804,20 @@ bool EngineDemo::UglyDemoCode()
 		m_demoObjects[i].GetMatPtr()->m_specularIntensity = 16.0f;
 		Engine::RenderEngine::AddGraphicalObject(&m_demoObjects[i]);
 	}
+
+	Engine::ShapeGenerator::MakeFrustum(&m_demoObjects[NUM_DARGONS], p.GetNearDist(), RENDER_DISTANCE, framebufferAspect, p.GetFOVY());
+	Engine::RenderEngine::AddGraphicalObject(&m_demoObjects[NUM_DARGONS]);
+	m_demoObjects[NUM_DARGONS].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_demoObjects[NUM_DARGONS].GetFullTransformPtr(), modelToWorldMatLoc));
+	m_demoObjects[NUM_DARGONS].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), worldToViewMatLoc));
+	m_demoObjects[NUM_DARGONS].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_perspective.GetPerspectivePtr()->GetAddress(), perspectiveMatLoc));
+	m_demoObjects[NUM_DARGONS].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_demoObjects[NUM_DARGONS].GetMatPtr()->m_materialColor, tintColorLoc));
+	m_demoObjects[NUM_DARGONS].AddUniformData(Engine::UniformData(GL_FLOAT, &m_demoObjects[NUM_DARGONS].GetMatPtr()->m_specularIntensity, tintIntensityLoc));
 	return true;
+}
+
+void EngineDemo::SwapFrameBuffers()
+{
+	pCurrentBuffer = ((pCurrentBuffer == &nearestBuffer) ? &linearBuffer : &nearestBuffer);
+	bufferTexID = *pCurrentBuffer->GetTexIdPtr();
 }
 

@@ -30,7 +30,7 @@ void GetEyeSpace(out vec3 positionEye, out vec3 normalNormEye)
 	normalNormEye = normalize(inData.fragNormWorld);
 }
 
-vec3 CalculatePhongLight(vec3 positionEye, vec3 normalNormEye)
+vec3 CalculatePhongLight(vec3 positionEye, vec3 normalNormEye, float shadow)
 {
 	vec3 diffuseLight = diffuseLightColor * diffuseLightIntensity * max(dot(normalNormEye, positionEye), 0.0f);
 
@@ -40,7 +40,6 @@ vec3 CalculatePhongLight(vec3 positionEye, vec3 normalNormEye)
 	vec3 reflectionDirection = reflect(normalize(inData.fragPosWorld - lightPos_WorldSpace), normalNormEye);
 	vec3 specularLight = specularLightColor * specularLightIntensity * pow(max(dot(viewDirection, reflectionDirection), 0.0f), specularPower);
 
-	float shadow = textureProj(shadowMap, inData.shadowCoord);
 	vec3 totalLight = ambientLight + (shadow * (diffuseLight + specularLight));
 	return clamp((totalLight)* inData.lightColor, 0.0f, 1.0f);
 }
@@ -52,11 +51,28 @@ void PhongWithShadow()
 	vec3 normalNormEye;
 
 	GetEyeSpace(positionEye, normalNormEye);
-	vec3 light = CalculatePhongLight(positionEye, normalNormEye);
-	fColor = vec4(light, 1.0f);
 
-	float shadow = textureProj(shadowMap, inData.shadowCoord);
-	fColor = 0.9901*fColor + 0.01 * vec4(shadow, shadow, shadow, 1.0f);
+	float shadow = inData.shadowCoord.z > 0.0f ? textureProj(shadowMap, inData.shadowCoord) : 1.0f;
+	vec3 light = CalculatePhongLight(positionEye, normalNormEye, shadow);
+	fColor = vec4(light, 1.0f);
+}
+
+subroutine(RenderPassType)
+void PhongWithShadowAverage()
+{
+	vec3 positionEye;
+	vec3 normalNormEye;
+
+	GetEyeSpace(positionEye, normalNormEye);
+
+	float shadow2 = textureProjOffset(shadowMap, inData.shadowCoord, ivec2(1, 1));
+	float shadow3 = textureProjOffset(shadowMap, inData.shadowCoord, ivec2(1, -1));
+	float shadow4 = textureProjOffset(shadowMap, inData.shadowCoord, ivec2(-1, 1));
+	float shadow5 = textureProjOffset(shadowMap, inData.shadowCoord, ivec2(-1, -1));
+	float shadow = inData.shadowCoord.z < 0.0f ? 1.0f : 0.25f * (shadow2 + shadow3 + shadow4 + shadow5);
+
+	vec3 light = CalculatePhongLight(positionEye, normalNormEye, shadow);
+	fColor = vec4(light, 1.0f);
 }
 
 subroutine(RenderPassType)

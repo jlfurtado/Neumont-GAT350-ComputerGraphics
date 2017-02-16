@@ -16,6 +16,7 @@
 
 namespace Engine
 {
+	Mesh ShapeGenerator::frustumMesh;
 	Mesh ShapeGenerator::cubeMesh;
 	Mesh ShapeGenerator::lightingCubeMesh;
 	Mesh ShapeGenerator::normalCubeMesh;
@@ -213,6 +214,21 @@ namespace Engine
 		Vec3(+1.0f, -1.0f, +1.0f), Vec3(0.0f, -1.0f, 0.0f), // top left
 		Vec3(-1.0f, -1.0f, +1.0f), Vec3(0.0f, -1.0f, 0.0f) // bottom left
 	};
+
+	bool ShapeGenerator::MakeFrustum(GraphicalObject * pObject, float near, float far, float aspect, float fovy)
+	{
+		// TODO: SUPPORT MULTIPLE FRUSTUMS OF DIFFERENT SIZES
+		static bool first = true;
+		if (!pObject) { GameLogger::Log(MessageType::cError, "ShapeGenerator failed to make a frustum! Invalid graphical object pointer passed!\n"); return false; }
+
+		// only setup mesh the first time a shape of this type is being created, no wasted buffer space
+		if (first) { if (!SetupFrustum(near, far, aspect, fovy)) { return false; } first = false; }
+
+		pObject->SetMeshPointer(&frustumMesh);
+
+		GameLogger::Log(MessageType::Process, "ShapeGenerator made a normal cube!\n");
+		return true;
+	}
 
 	bool ShapeGenerator::MakeNormalCube(GraphicalObject * pObject)
 	{
@@ -854,6 +870,46 @@ namespace Engine
 		}
 
 		GameLogger::Log(MessageType::Process, "ShapeGenerator successfully setup sphere mesh!\n");
+		return true;
+	}
+
+	Vec3 ShapeGenerator::frustumVerts[FRUSTUM_VERTEX_COUNT];
+
+	GLuint ShapeGenerator::frustumIndices[FRUSTUM_INDEX_COUNT] = {
+		0, 1, 1, 2, 2, 3, 3, 0,
+		4, 5, 5, 6, 6, 7, 7, 4,
+		0, 4, 1, 5, 2, 6, 3, 7
+		//0, 1, 5, 5, 0, 4,
+		//1, 2, 5, 5, 2, 6,
+		//2, 3, 6, 6, 3, 7,
+		//3, 0, 7, 7, 0, 4
+	};
+
+	bool ShapeGenerator::SetupFrustum(float near, float far, float aspect, float fovy)
+	{
+		float nearh = tanf(fovy / 2.0f) * near;
+		float nearw = nearh * aspect;
+		float farh = tanf(fovy / 2.0f) * far;
+		float farw = farh * aspect;
+
+		frustumVerts[0] = Vec3(-nearw, +nearh, near);
+		frustumVerts[1] = Vec3(+nearw, +nearh, near);
+		frustumVerts[2] = Vec3(+nearw, -nearh, near);
+		frustumVerts[3] = Vec3(-nearw, -nearh, near);
+		frustumVerts[4] = Vec3(-farw, +farh, far);
+		frustumVerts[5] = Vec3(+farw, +farh, far);
+		frustumVerts[6] = Vec3(+farw, -farh, far);
+		frustumVerts[7] = Vec3(-farw, -farh, far);
+
+		frustumMesh = Mesh(FRUSTUM_VERTEX_COUNT, FRUSTUM_INDEX_COUNT, &frustumVerts[0], &frustumIndices[0], GL_LINES, IndexSizeInBytes::Uint, s_PShaderID, VertexFormat::PositionOnly, false);
+
+		if (!RenderEngine::AddMesh(&frustumMesh))
+		{
+			GameLogger::Log(MessageType::cError, "Could not add debug cube mesh!\n");
+			return false;
+		}
+
+		GameLogger::Log(MessageType::Process, "ShapeGenerator successfully setup debug cube mesh!\n");
 		return true;
 	}
 

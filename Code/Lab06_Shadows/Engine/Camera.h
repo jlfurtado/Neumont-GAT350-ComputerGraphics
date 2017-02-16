@@ -38,6 +38,7 @@ namespace Engine
 		void MouseRotate(int dx, int dy);
 		Vec3 GetPosition();
 		void SetPosition(Vec3 newPosition);
+		Mat4 GetRotMat();
 
 
 	private:

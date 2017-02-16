@@ -27,6 +27,7 @@ namespace Engine
 		static ENGINE_SHARED Vec3 Min(const Vec3& v1, const Vec3& v2);
 		static ENGINE_SHARED Vec3 Max(const Vec3& v1, const Vec3& v2);
 		static ENGINE_SHARED Vec3 GetNormalFromRayCastingOutput(RayCastingOutput output);
+		static ENGINE_SHARED float GetVectorAngleRadians(const Vec3& left, const Vec3& right);
 	};
 }
 
