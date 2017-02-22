@@ -46,6 +46,7 @@ namespace Engine
 		static bool MakeSphere(GraphicalObject *pObject, Vec3 color);
 		static bool ReadSceneFile(const char *fileName, GraphicalObject *pObject, GLuint shaderProgramID, const char *texturePath = nullptr, bool cullObject = true);
 		static bool CreatePoints(GraphicalObject *pObject, int numPoints, Vec3 upperLeftBound, Vec3 lowerRightBound, int shaderId, bool colorOn = false, Vec3 color = Vec3(0.0f));
+		static bool MakeNearPlanePlane(GraphicalObject * pObject, GLuint shaderProgramId);
 
 	private:
 		// methods
@@ -77,6 +78,7 @@ namespace Engine
 		static bool SetupDebugCube(Vec3 color);
 		static bool SetupDebugArrow(Vec3 topColor, Vec3 sideColor);
 		static bool SetupGridMesh(unsigned int widthInLines, unsigned int heightInLines, Vec3 color);
+		static bool SetupNearPlanePlane(GLuint shaderProgramId);
 
 		// data
 		static unsigned int s_PCShaderID;
@@ -126,6 +128,11 @@ namespace Engine
 		static const int FRUSTUM_INDEX_COUNT = 24;
 		static GLuint frustumIndices[FRUSTUM_INDEX_COUNT];
 
+		static const int NEARPLANENDC_VERTEX_COUNT = 4;
+		static Vec3 nearPlanePlaneVerts[NEARPLANENDC_VERTEX_COUNT];
+		static const int NEARPLANENDC_INDEX_COUNT = 6;
+		static GLuint nearPlanePlaneIndices[NEARPLANENDC_INDEX_COUNT];
+
 		static Mesh debugCubeMesh;
 		static Mesh gridMesh;
 		static Mesh cubeMesh;
@@ -137,6 +144,7 @@ namespace Engine
 		static Mesh horizontalPlaneMesh;
 		static Mesh normalCubeMesh;
 		static Mesh frustumMesh;
+		static Mesh nearPlaneMeshNDC;
 	};
 }
 

@@ -27,6 +27,7 @@ namespace Engine
 	Mesh ShapeGenerator::sphereMesh;
 	Mesh ShapeGenerator::debugArrowMesh;
 	Mesh ShapeGenerator::horizontalPlaneMesh;
+	Mesh ShapeGenerator::nearPlaneMeshNDC;
 	const char *ShapeGenerator::s_sceneFileNames[MAX_SCENE_FILES]{ nullptr };
 	Mesh *ShapeGenerator::s_sceneMeshes[MAX_SCENE_FILES]{ nullptr };
 	Mesh *ShapeGenerator::s_pPointMeshes[MAX_POINT_MESHES]{ nullptr };
@@ -523,6 +524,21 @@ namespace Engine
 		return true; 
 	}
 
+	bool ShapeGenerator::MakeNearPlanePlane(GraphicalObject * pObject, GLuint shaderProgramId)
+	{
+		// TODO: SUPPORT MULTIPLE FRUSTUMS OF DIFFERENT SIZES!?!??! maybe not needed  - just pasted comment
+		static bool first = true;
+		if (!pObject) { GameLogger::Log(MessageType::cError, "ShapeGenerator failed to make a NearPlanePlane! Invalid graphical object pointer passed!\n"); return false; }
+
+		// only setup mesh the first time a shape of this type is being created, no wasted buffer space
+		if (first) { if (!SetupNearPlanePlane(shaderProgramId)) { return false; } first = false; }
+
+		pObject->SetMeshPointer(&nearPlaneMeshNDC);
+
+		GameLogger::Log(MessageType::Process, "ShapeGenerator made a NearPlanePlane!\n");
+		return true;
+	}
+
 	bool ShapeGenerator::Initialize(unsigned int pcShaderID, unsigned int pShaderID, unsigned int pnShaderID)
 	{
 		// set shaders to use
@@ -951,6 +967,31 @@ namespace Engine
 		}
 
 		GameLogger::Log(MessageType::Process, "ShapeGenerator successfully made a grid!\n");
+		return true;
+	}
+
+	Vec3 ShapeGenerator::nearPlanePlaneVerts[NEARPLANENDC_VERTEX_COUNT] = {
+		Vec3(-1.0f, 1.0f, 0.0f),
+		Vec3(1.0f, 1.0f, 0.0f),
+		Vec3(1.0f, -1.0f, 0.0f),
+		Vec3(-1.0f, -1.0f, 0.0f)
+	};
+
+	GLuint ShapeGenerator::nearPlanePlaneIndices[NEARPLANENDC_INDEX_COUNT] = {
+		0, 3, 1, 1, 3, 2 
+	};
+
+	bool ShapeGenerator::SetupNearPlanePlane(GLuint shaderProgramId)
+	{
+		nearPlaneMeshNDC = Mesh(NEARPLANENDC_VERTEX_COUNT, NEARPLANENDC_INDEX_COUNT, &nearPlanePlaneVerts[0], &nearPlanePlaneIndices[0], GL_TRIANGLES, IndexSizeInBytes::Uint, shaderProgramId, VertexFormat::PositionOnly, true);
+
+		if (!RenderEngine::AddMesh(&nearPlaneMeshNDC))
+		{
+			GameLogger::Log(MessageType::cError, "Could not add plane mesh!\n");
+			return false;
+		}
+
+		GameLogger::Log(MessageType::Process, "ShapeGenerator successfully made a plane!\n");
 		return true;
 	}
 

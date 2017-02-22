@@ -209,6 +209,9 @@
     <None Include="..\Data\Shaders\Subroutine.vert.shader" />
     <None Include="..\Data\Shaders\TwoSidedPhong.frag.shader" />
     <None Include="..\Data\Shaders\TwoSidedPhong.vert.shader" />
+    <None Include="..\Data\Shaders\VolumetricShadows.frag.shader" />
+    <None Include="..\Data\Shaders\VolumetricShadows.geom.shader" />
+    <None Include="..\Data\Shaders\VolumetricShadows.vert.shader" />
     <None Include="..\Data\Shaders\Wireframe.frag.shader" />
     <None Include="..\Data\Shaders\Wireframe.geom.shader" />
     <None Include="..\Data\Shaders\Wireframe.vert.shader" />

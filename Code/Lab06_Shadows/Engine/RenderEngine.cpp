@@ -1,5 +1,7 @@
 #include "RenderEngine.h"
 #include "RenderEngine.h"
+#include "RenderEngine.h"
+#include "RenderEngine.h"
 #include "Mesh.h"
 #include "GraphicalObject.h"
 #include "BufferManager.h"
@@ -159,6 +161,8 @@ namespace Engine
 
 	bool RenderEngine::DrawSingleObjectDifferently(GraphicalObject * pGob, void * pPersp, void * pLook, void *pTexId, int lookLoc, int perspLoc, int texLoc)
 	{
+		//if (Engine::MyGL::TestForError(Engine::MessageType::ConsoleOnly, "BEFORE METHOD")) { return false; }
+
 		// get pointers to the correct buffer info and group so we can setup the drawing enivornment properly for this object
 		BufferGroup *pCurrentBufferGroup = nullptr;
 		BufferInfo *pCurrentBufferInfo = nullptr;
@@ -196,6 +200,8 @@ namespace Engine
 			return false;
 		}
 
+		//if (Engine::MyGL::TestForError(Engine::MessageType::ConsoleOnly, "Spot BEFORE CULLING")) { return false; }
+
 		// grouped based on culling, set culling once for the whole group instead of for every object!
 		if (pCurrentBufferGroup->BufferGroupDoesCull()) {
 			glEnable(GL_CULL_FACE);
@@ -203,6 +209,9 @@ namespace Engine
 		else {
 			glDisable(GL_CULL_FACE);
 		}
+
+		//if (Engine::MyGL::TestForError(Engine::MessageType::ConsoleOnly, "Spot IN CULLING")) { return false; }
+
 
 		// attempt to set attribs and bind buffers
 		if (!SetupDrawingEnvironment(pCurrentBufferInfo)) { GameLogger::Log(MessageType::cWarning, "Failed to setup drawing environment for buffer info in single draw! Will not draw from list!\n"); return false; }
@@ -215,18 +224,24 @@ namespace Engine
 			void **pTexPtr = pGob->GetUniformDataPtrPtrByLoc(texLoc);
 
 			// make a copy of the pointers pointed to by the pointers so we can restore their values
-			void *pLookPrior = *pLookPtr;
-			void *pPerspPrior = *pPerspPtr;
+			void *pLookPrior = pLookPtr ? *pLookPtr : nullptr;
+			void *pPerspPrior = pPerspPtr ? *pPerspPtr : nullptr;
 			void *pTexPrior = pTexPtr ? *pTexPtr : nullptr;
 
 			// set the pointers pointed to by the pointers to point to the new matrices
-			*pLookPtr = pLook;
-			*pPerspPtr = pPersp;
+			if (pLookPtr) { *pLookPtr = pLook; }
+			if (pPerspPtr) { *pPerspPtr = pPersp; }
 			if (pTexPtr) { *pTexPtr = pTexId; }
 
 			// call the callback, pass the uniforms
+			// if (Engine::MyGL::TestForError(Engine::MessageType::ConsoleOnly, "Spot BEFORE UNIFORMS")) { return false; }
+
 			pGob->PassUniforms();
 			pGob->CallCallback();
+			// if (Engine::MyGL::TestForError(Engine::MessageType::ConsoleOnly, "Spot IN UNIFORMS")) { return false; }
+
+
+			// if (Engine::MyGL::TestForError(Engine::MessageType::ConsoleOnly, "Spot BEFORE DRAWING")) { return false; }
 
 			// draw
 			if (pGob->GetMeshPointer()->IsIndexed())
@@ -242,14 +257,100 @@ namespace Engine
 					pGob->GetMeshPointer()->GetRenderInfoPtr()->vertexBufferOffset / pGob->GetMeshPointer()->GetSizeOfVertex(),
 					pGob->GetMeshPointer()->GetVertexCount());
 			}
+			// if (Engine::MyGL::TestForError(Engine::MessageType::ConsoleOnly, "Spot IN DRAWING")) { return false; }
+
+			//	if (Engine::MyGL::TestForError(Engine::MessageType::ConsoleOnly, "Spot IN METHOD")) { return false; }
 
 			// restore the pointers pointed to by the pointers to what they were pointing to befor
-			*pLookPtr = pLookPrior;
-			*pPerspPtr = pPerspPrior;
+			if (pLookPtr) { *pLookPtr = pLookPrior; }
+			if (pPerspPtr) { *pPerspPtr = pPerspPrior; }
 			if (pTexPtr) { *pTexPtr = pTexPrior; }
 		}
 
 		return true;
+	}
+
+	bool RenderEngine::DrawSingleObjectRegularly(GraphicalObject * pGob)
+	{
+		return DrawSingleObjectDifferently(pGob, nullptr, nullptr, nullptr, -1, -1, -1);
+	}
+
+	bool RenderEngine::DrawSingleObjectWithDifferentMeshMode(GraphicalObject * pGob, GLenum meshMode)
+	{
+		// get pointers to the correct buffer info and group so we can setup the drawing enivornment properly for this object
+		BufferGroup *pCurrentBufferGroup = nullptr;
+		BufferInfo *pCurrentBufferInfo = nullptr;
+
+		// search for the correct buffer info and group
+		bool found = false;
+		for (int i = 0; i < BufferManager::GetNextBufferGroup() && !found; ++i)
+		{
+			BufferGroup * pBG = BufferManager::GetBufferGroups() + i;
+			for (int j = 0; j < pBG->GetNextBufferInfo() && !found; ++j)
+			{
+				BufferInfo *pBI = pBG->GetBufferInfos() + j;
+				if (pBI->BelongsInBuffer(pGob)) { pCurrentBufferInfo = pBI; pCurrentBufferGroup = pBG; found = true; }
+			}
+		}
+
+		// if it is not found, explode violently
+		if (!found) { GameLogger::Log(MessageType::cError, "Failed to DrawObjectWithLookAtAndPerspective! Could not find buffer object belongs in!\n"); return false; }
+
+		// convenience pointer :)
+		// get shader program for current group
+		ShaderProgram *pCurrentProgram = GetShaderProgramByID(pCurrentBufferGroup->GetShaderProgramID());
+
+		// if invalid don't stop drawing everything, just don't draw things from this group
+		if (!pCurrentProgram)
+		{
+			GameLogger::Log(MessageType::cWarning, "Failed to use shader program for buffer group in single draw! Shader program was not found in render engine!\n");
+			return false;
+		}
+
+		// if not invalid, use it
+		if (!pCurrentProgram->UseProgram())
+		{
+			GameLogger::Log(MessageType::cWarning, "Failed to use shader program for buffer group in single draw! Will not draw objects from that group!\n");
+			return false;
+		}
+
+		//if (Engine::MyGL::TestForError(Engine::MessageType::ConsoleOnly, "Spot BEFORE CULLING")) { return false; }
+
+		// grouped based on culling, set culling once for the whole group instead of for every object!
+		if (pCurrentBufferGroup->BufferGroupDoesCull()) {
+			glEnable(GL_CULL_FACE);
+		}
+		else {
+			glDisable(GL_CULL_FACE);
+		}
+
+		//if (Engine::MyGL::TestForError(Engine::MessageType::ConsoleOnly, "Spot IN CULLING")) { return false; }
+
+
+		// attempt to set attribs and bind buffers
+		if (!SetupDrawingEnvironment(pCurrentBufferInfo)) { GameLogger::Log(MessageType::cWarning, "Failed to setup drawing environment for buffer info in single draw! Will not draw from list!\n"); return false; }
+
+		if (pGob->IsEnabled())
+		{
+			// call the callback, pass the uniforms
+			pGob->PassUniforms();
+			pGob->CallCallback();
+
+			// draw
+			if (pGob->GetMeshPointer()->IsIndexed())
+			{
+				glDrawElementsBaseVertex(meshMode, pGob->GetMeshPointer()->GetIndexCount(),
+					GetIndexType(pGob->GetMeshPointer()->GetIndexSize()),
+					(void *)(pGob->GetMeshPointer()->GetRenderInfoPtr()->indexBufferOffset),
+					pGob->GetMeshPointer()->GetRenderInfoPtr()->vertexBufferOffset / pGob->GetMeshPointer()->GetSizeOfVertex());
+			}
+			else
+			{
+				glDrawArrays(meshMode,
+					pGob->GetMeshPointer()->GetRenderInfoPtr()->vertexBufferOffset / pGob->GetMeshPointer()->GetSizeOfVertex(),
+					pGob->GetMeshPointer()->GetVertexCount());
+			}
+		}
 	}
 
 	void RenderEngine::LogStats()

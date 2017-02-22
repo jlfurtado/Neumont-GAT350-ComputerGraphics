@@ -44,6 +44,11 @@ vec3 CalculatePhongLight(vec3 positionEye, vec3 normalNormEye, float shadow)
 	return clamp((totalLight)* inData.lightColor, 0.0f, 1.0f);
 }
 
+bool manageOut()
+{
+	return inData.shadowCoord.z < 0.0f || inData.shadowCoord.z / inData.shadowCoord.w  > 1.0f;
+}
+
 subroutine(RenderPassType)
 void PhongWithShadow()
 {
@@ -52,7 +57,7 @@ void PhongWithShadow()
 
 	GetEyeSpace(positionEye, normalNormEye);
 
-	float shadow = inData.shadowCoord.z > 0.0f ? textureProj(shadowMap, inData.shadowCoord) : 1.0f;
+	float shadow = manageOut() ? 1.0f : textureProj(shadowMap, inData.shadowCoord);
 	vec3 light = CalculatePhongLight(positionEye, normalNormEye, shadow);
 	fColor = vec4(light, 1.0f);
 }
@@ -69,7 +74,7 @@ void PhongWithShadowAverage()
 	float shadow3 = textureProjOffset(shadowMap, inData.shadowCoord, ivec2(1, -1));
 	float shadow4 = textureProjOffset(shadowMap, inData.shadowCoord, ivec2(-1, 1));
 	float shadow5 = textureProjOffset(shadowMap, inData.shadowCoord, ivec2(-1, -1));
-	float shadow = inData.shadowCoord.z < 0.0f ? 1.0f : 0.25f * (shadow2 + shadow3 + shadow4 + shadow5);
+	float shadow = manageOut() ? 1.0f : 0.25f * (shadow2 + shadow3 + shadow4 + shadow5);
 
 	vec3 light = CalculatePhongLight(positionEye, normalNormEye, shadow);
 	fColor = vec4(light, 1.0f);

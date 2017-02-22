@@ -26,6 +26,8 @@ namespace Engine
 		static void RemoveGraphicalObject(GraphicalObject *pGraphicalObjectToRemove);
 		static bool Draw();
 		static bool DrawSingleObjectDifferently(GraphicalObject *pGob, void *pPersp, void *pLook, void *pTexId, int lookLoc, int perspLoc, int texLoc);
+		static bool DrawSingleObjectRegularly(GraphicalObject * pGob);
+		static bool DrawSingleObjectWithDifferentMeshMode(GraphicalObject * pGob, GLenum meshMode);
 		static void LogStats();
 
 	private:

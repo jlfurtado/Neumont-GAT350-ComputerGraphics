@@ -23,9 +23,11 @@ namespace Engine
 		void SetAspectRatio(float aspectRatio);
 		void SetScreenDimmensions(float width, float height);
 		float GetFOVY();
+		float GetFarDist();
 		float GetNearDist();
 		float GetWidth();
 		float GetHeight();
+		float GetAspectRatio();
 		Mat4 GetPerspective();
 		Mat4 *GetPerspectivePtr();
 

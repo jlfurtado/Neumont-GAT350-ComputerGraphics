@@ -1,4 +1,5 @@
 #include "Perspective.h"
+#include "Perspective.h"
 
 // Justin Furtadon
 // 7/10/2016
@@ -43,6 +44,11 @@ namespace Engine
 		return m_fieldOfViewY;
 	}
 
+	float Perspective::GetFarDist()
+	{
+		return m_farPlane;
+	}
+
 	float Perspective::GetNearDist()
 	{
 		return m_nearPlane;
@@ -56,6 +62,11 @@ namespace Engine
 	float Perspective::GetHeight()
 	{
 		return m_height;
+	}
+
+	float Perspective::GetAspectRatio()
+	{
+		return m_aspectRatio;
 	}
 
 	Mat4 Perspective::GetPerspective()

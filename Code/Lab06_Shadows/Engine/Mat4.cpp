@@ -103,6 +103,21 @@ namespace Engine
 					0.0f, 0.0f, 1.0f, 0.0f);
 	}
 
+	Mat4 Mat4::InfinitePerspective(float fovy, float aspect, float near)
+	{
+		float range = tan(fovy * 0.5f) * near;
+		float left = -range * aspect;
+		float right = range * aspect;
+		float bottom = -range;
+		float top = range;
+
+		return Mat4((2.0f * near) / (right - left), 0.0f, 0.0f, 0.0f,
+					0.0f, (2.0f * near) / (top - bottom), 0.0f, 0.0f,
+					0.0f, 0.0f, -1.0f, -1.0f,
+					0.0f, 0.0f, -2.0f * near, 0.0f);
+	}
+
+
 	Mat4 Mat4::LookAt(const Vec3 & cameraPosition, const Vec3 & targetPosition, const Vec3 & up)
 	{
 		Vec3 z = (targetPosition - cameraPosition).Normalize();

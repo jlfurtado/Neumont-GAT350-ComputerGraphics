@@ -34,6 +34,7 @@ namespace Engine
 		static Mat4 LookAt(const Vec3& cameraPosition, const Vec3& targetPosition, const Vec3& up);
 		static Mat4 ViewPort(float right, float left, float top, float bottom, float far, float near);
 		static Mat4 Bias();
+		static Mat4 InfinitePerspective(float fovy, float aspect, float near);
 
 		// utility
 		float * GetAddress();

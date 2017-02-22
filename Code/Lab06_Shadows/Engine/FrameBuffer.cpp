@@ -269,6 +269,118 @@ namespace Engine
 		glBindFramebuffer(GL_FRAMEBUFFER, unbindFbo);
 		return true;
 	}
+
+	bool FrameBuffer::InitializeForShadows(int w, int h)
+	{
+		width = w;
+		height = h;
+
+		// at least its kinda refactored
+		InitTexture(&renderTextureId);
+		InitTexture(&renderTexture2Id);
+
+		// Create framebuffer object
+		glGenFramebuffers(1, &fboHandle);
+
+		// check for errors
+		if (MyGL::TestForError(MessageType::cError, "FrameBuffer InitializeForTexture GenFramebuffers Errors"))
+		{
+			GameLogger::Log(MessageType::cError, "Failed to Generate Framebuffer in FrameBufffer InitializeForTexture!\n");
+			return false;
+		}
+
+		// bind the framebuffer
+		glBindFramebuffer(GL_FRAMEBUFFER, fboHandle);
+
+		// check for errors
+		if (MyGL::TestForError(MessageType::cError, "FrameBuffer InitializeForTexture BindFramebuffer Errors"))
+		{
+			GameLogger::Log(MessageType::cError, "Failed to BindFramebuffer in FrameBufffer InitializeForTexture!\n");
+			return false;
+		}
+
+		// Bind the texture to the fbo
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTextureId, mipMapLevel);
+
+		// check for errors
+		if (MyGL::TestForError(MessageType::cError, "FrameBuffer InitializeForTexture FramebufferTexture2D Errors"))
+		{
+			GameLogger::Log(MessageType::cError, "Failed to Hook framebuffer to texture in FrameBufffer InitializeForTexture!\n");
+			return false;
+		}
+
+		// i'll fix this later
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, renderTexture2Id, mipMapLevel);
+
+		if (MyGL::TestForError(MessageType::cError, "FrameBuffer Initialize NEWSTUFF Errors"))
+		{
+			GameLogger::Log(MessageType::cError, "FrameBuffer init failed cuz new stuff\n");
+			return false;
+		}
+
+		// Create the depth buffer and bind it
+		glGenRenderbuffers(1, &depthBufferId);
+
+		// check for errors
+		if (MyGL::TestForError(MessageType::cError, "FrameBuffer InitializeForTexture GenRenderbuffers Errors"))
+		{
+			GameLogger::Log(MessageType::cError, "Failed to Generate Renderbuffers in FrameBufffer InitializeForTexture!\n");
+			return false;
+		}
+
+		// bind the render buffer
+		glBindRenderbuffer(GL_RENDERBUFFER, depthBufferId);
+
+		// check for errors
+		if (MyGL::TestForError(MessageType::cError, "FrameBuffer InitializeForTexture BindRenderbuffer Errors"))
+		{
+			GameLogger::Log(MessageType::cError, "Failed to Bind Renderbuffer in FrameBufffer InitializeForTexture!\n");
+			return false;
+		}
+
+		// send data to opengl
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+
+		// check for errors
+		if (MyGL::TestForError(MessageType::cError, "FrameBuffer InitializeForTexture RenderbufferStorage Errors"))
+		{
+			GameLogger::Log(MessageType::cError, "Failed to send info about renderbuffer to opengl in FrameBufffer InitializeForTexture!\n");
+			return false;
+		}
+
+		// Bind the depth buffer to the FBO
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBufferId);
+
+		// check for errors
+		if (MyGL::TestForError(MessageType::cError, "FrameBuffer InitializeForTexture FramebufferRenderbuffer Errors"))
+		{
+			GameLogger::Log(MessageType::cError, "Failed to hook up the framebuffer to the renderbuffer in FrameBufffer InitializeForTexture!\n");
+			return false;
+		}
+
+		// Set the target for the fragment shader outputs
+		GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+		const GLsizei numDrawBuffers = sizeof(drawBuffers) / sizeof(drawBuffers[0]);
+		glDrawBuffers(numDrawBuffers, drawBuffers);
+
+		// check for errors
+		if (MyGL::TestForError(MessageType::cError, "FrameBuffer InitializeForTexture DrawBuffers Errors"))
+		{
+			GameLogger::Log(MessageType::cError, "Failed to set target for fragment shader outputs in FrameBufffer InitializeForTexture!\n");
+			return false;
+		}
+
+		// Check that our framebuffer is ok
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		{
+			GameLogger::Log(MessageType::cError, "FrameBuffer InitializeForTexture Failed! Framebuffer status is not complete!\n");
+			return false;
+		}
+
+		// Unbind FBO and revert to default
+		glBindFramebuffer(GL_FRAMEBUFFER, unbindFbo);
+		return true;
+	}
 	
 	void FrameBuffer::Bind()
 	{
@@ -290,5 +402,66 @@ namespace Engine
 	GLuint * FrameBuffer::GetTexIdPtr()
 	{
 		return &renderTextureId;
+	}
+
+	GLuint * FrameBuffer::GetTexId2Ptr()
+	{
+		return &renderTexture2Id;
+	}
+
+	int FrameBuffer::GetWidth()
+	{
+		return width;
+	}
+
+	int FrameBuffer::GetHeight()
+	{
+		return height;
+	}
+
+	bool FrameBuffer::InitTexture(GLuint *texIdPtr)
+	{
+		// make the texture
+		glGenTextures(1, texIdPtr);
+
+		// check for errors
+		if (MyGL::TestForError(MessageType::cError, "FrameBuffer InitializeForTexture GenTexture Errors"))
+		{
+			GameLogger::Log(MessageType::cError, "Failed to Generate Texture in FrameBufffer InitializeForTexture!\n");
+			return false;
+		}
+
+		// bind the texture we just created
+		glBindTexture(GL_TEXTURE_2D, *texIdPtr);
+
+		// check for errors
+		if (MyGL::TestForError(MessageType::cError, "FrameBuffer InitializeForTexture BindTexture Errors"))
+		{
+			GameLogger::Log(MessageType::cError, "Failed to Bind Texture in FrameBufffer InitializeForTexture!\n");
+			return false;
+		}
+
+		// send some data about the texture to opengl
+		glTexStorage2D(GL_TEXTURE_2D, numTextureLevels, internalFormatImage, width, height);
+
+		// check for errors
+		if (MyGL::TestForError(MessageType::cError, "FrameBuffer InitializeForTexture TexStorage2D Errors"))
+		{
+			GameLogger::Log(MessageType::cError, "TexStorage2D in failedFrameBufffer InitializeForTexture!\n");
+			return false;
+		}
+
+		// set some parameters
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+		// check for errors
+		if (MyGL::TestForError(MessageType::cError, "FrameBuffer InitializeForTexture TexParameteri Errors"))
+		{
+			GameLogger::Log(MessageType::cError, "TexParameteri failed in FrameBufffer InitializeForTexture!\n");
+			return false;
+		}
+
+		return true;
 	}
 }

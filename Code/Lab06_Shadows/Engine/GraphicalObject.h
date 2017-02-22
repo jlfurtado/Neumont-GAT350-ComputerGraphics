@@ -70,7 +70,7 @@ namespace Engine
 
 	private:
 		// data
-		static const int MAX_UNFIFORM_DATA = 20;
+		static const int MAX_UNFIFORM_DATA = 25;
 		UniformData m_uniformData[MAX_UNFIFORM_DATA];
 		int m_numUniformDatas{ 0 };
 

@@ -16,6 +16,7 @@
 #include "Entity.h"
 #include "MyWindow.h"
 #include "GraphicalObject.h"
+#include "FrameBuffer.h"
 
 class QMouseEvent;
 
@@ -54,6 +55,19 @@ private:
 	void ShowFrameRate(float dt);
 	bool UglyDemoCode();
 	void SwapFrameBuffers();
+	void SwapSubroutineIndex(void ** pIndexPtr, int start, int end);
+	void DoBlend();
+	void DontBlend();
+	void DoFramebufferThing(int w1, int h1, int w2, int h2, int texID);
+	void DontDepthThisPass();
+	void DoColorThisPass();
+	void DoStencilThing();
+	void DoStencilThingTwo();
+	void PassOneRegular();
+	void PassTwoRegular();
+	void PassOneVolumetric();
+	void PassTwoVolumetric();
+	void PassThreeVolumetric();
 
 	//data
 	static const int NUM_SHADER_PROGRAMS = 10;
@@ -89,6 +103,11 @@ private:
 	GLint subOneIndex;
 	GLint subTwoIndex;
 	GLint subThreeIndex;
+	GLint shadeSubIndex;
+	GLint doNothingFragSubIndex;
+	GLint passSubIndex;
+	GLint edgeSubIndex;
+	GLint finalSubIndex;
 	GLint fogMinLoc;
 	GLint fogMaxLoc;
 	GLint fogColorLoc;

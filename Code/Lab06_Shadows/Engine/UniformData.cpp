@@ -26,11 +26,10 @@ namespace Engine
 		case GL_FLOAT_MAT4:
 			glUniformMatrix4fv(m_uniformDataLoc, 1, GL_FALSE, reinterpret_cast<float*>(m_pUniformData));
 			/*TODO CHECK THIS
-			if (m_logForThis) { GameLogger::Log(MessageType::ConsoleOnly, "Passed (%.3f, %.3f, %.3f, %.3f)\n\t\t\t\t(%.3f, %.3f, %.3f, %.3f)\n\t\t\t\t(%.3f, %.3f, %.3f, %.3f)\n\t\t\t\t(%.3f, %.3f, %.3f, %.3f) to uniform [%d]\n", *(reinterpret_cast<float*>(m_pUniformData) + 0), *(reinterpret_cast<float*>(m_pUniformData) + 4), *(reinterpret_cast<float*>(m_pUniformData) + 8), *(reinterpret_cast<float*>(m_pUniformData) + 12), 				 
-																																																									 *(reinterpret_cast<float*>(m_pUniformData) + 1), *(reinterpret_cast<float*>(m_pUniformData) + 5), *(reinterpret_cast<float*>(m_pUniformData) + 9), *(reinterpret_cast<float*>(m_pUniformData) + 13), 
-																																																									 *(reinterpret_cast<float*>(m_pUniformData) + 2), *(reinterpret_cast<float*>(m_pUniformData) + 6), *(reinterpret_cast<float*>(m_pUniformData) + 10), *(reinterpret_cast<float*>(m_pUniformData) + 14), 
-																																																									 *(reinterpret_cast<float*>(m_pUniformData) + 3), *(reinterpret_cast<float*>(m_pUniformData) + 7), *(reinterpret_cast<float*>(m_pUniformData) + 11), *(reinterpret_cast<float*>(m_pUniformData) + 15), m_uniformDataLoc); }
-*/
+			if (m_logForThis) { GameLogger::Log(MessageType::ConsoleOnly, "Passed (%.3f, %.3f, %.3f, %.3f)\n\t\t\t\t(%.3f, %.3f, %.3f, %.3f)\n\t\t\t\t(%.3f, %.3f, %.3f, %.3f)\n\t\t\t\t(%.3f, %.3f, %.3f, %.3f) to uniform [%d]\n", *(reinterpret_cast<float*>(m_pUniformData) + 0), *(reinterpret_cast<float*>(m_pUniformData) + 4), *(reinterpret_cast<float*>(m_pUniformData) + 8), *(reinterpret_cast<float*>(m_pUniformData) + 12), 				 																																											 *(reinterpret_cast<float*>(m_pUniformData) + 3), *(reinterpret_cast<float*>(m_pUniformData) + 7), *(reinterpret_cast<float*>(m_pUniformData) + 11), *(reinterpret_cast<float*>(m_pUniformData) + 15), m_uniformDataLoc); }
+
+			
+			*/
 			break;
 
 		case GL_FLOAT_VEC3:
@@ -57,6 +56,7 @@ namespace Engine
 			break;
 
 		case GL_VERTEX_SHADER:
+		case GL_GEOMETRY_SHADER:
 		case GL_FRAGMENT_SHADER:
 			glUniformSubroutinesuiv(m_uniformType, m_uniformDataLoc, reinterpret_cast<GLuint*>(m_pUniformData)); // TODO: IT WORKS BUT ITS NOT READABLE (STUFF BADLY NAMED FOR THIS CASE WHICH IS UGLY ANYWAY)... REFACTOR!!!
 			break;
