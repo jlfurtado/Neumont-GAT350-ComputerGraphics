@@ -351,6 +351,8 @@ namespace Engine
 					pGob->GetMeshPointer()->GetVertexCount());
 			}
 		}
+
+		return true;
 	}
 
 	void RenderEngine::LogStats()
