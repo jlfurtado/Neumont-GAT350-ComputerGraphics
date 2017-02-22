@@ -67,7 +67,7 @@ KeyboardComponent playerInput;
 Engine::Vec3 spotlightDir(0.0f, -1.0f, 0.0f);
 float spotlightAttenuation = 1.0f, spotlightCutoff = Engine::MathUtility::ToRadians(45.0f);
 int numCelLevels = 4;
-Engine::Vec3 backgroundColor(0.01f);
+Engine::Vec3 backgroundColor(0.0f);
 Engine::Vec3 planeColor(1.0f);
 float fogMinDist = 70.0f, fogMaxDist = 250.0f;
 //Engine::GraphicalObject m_crate;
@@ -341,10 +341,6 @@ void EngineDemo::Draw()
 	// Clear window
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	Engine::RenderEngine::DrawSingleObjectRegularly(&m_lights[0]);
-	Engine::RenderEngine::DrawSingleObjectRegularly(&m_demoObjects[NUM_DARGONS_TOTAL]);
-
-
 	if (plane)
 	{
 		eyeLightVal = playerCamera.GetWorldToViewMatrix() * m_lights[1].GetPos();
@@ -355,14 +351,19 @@ void EngineDemo::Draw()
 		PassOneVolumetric();
 		PassTwoVolumetric();
 		PassThreeVolumetric();
+
+		Engine::RenderEngine::DrawSingleObjectRegularly(&m_lights[1]);
 	}
 	else
 	{
 		PassOneRegular();
 		PassTwoRegular();
+		glClearStencil(0);
+
+		Engine::RenderEngine::DrawSingleObjectRegularly(&m_lights[0]);
+		Engine::RenderEngine::DrawSingleObjectRegularly(&m_demoObjects[NUM_DARGONS_TOTAL]);
 	}
 
-	Engine::RenderEngine::DrawSingleObjectRegularly(&m_lights[1]);
 
 	// draw fps text
 	m_fpsTextObject.RenderText(&m_shaderPrograms[0], debugColorLoc);
@@ -831,8 +832,6 @@ void EngineDemo::PassTwoVolumetric()
 
 	DoStencilThing();
 	
-	
-	
 	geomSubIndex = edgeSubIndex;
 	fragSubIndex = doNothingFragSubIndex;
 	
@@ -955,7 +954,6 @@ bool EngineDemo::UglyDemoCode()
 
 	for (int i = 0; i < 2; ++i)
 	{
-		float offset = i < 1 ? -DARGON_PLANE_OFFSET : DARGON_PLANE_OFFSET;
 		Engine::ShapeGenerator::MakeLightingCube(&m_lights[i]);
 		m_lights[i].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_lights[i].GetFullTransformPtr()->GetAddress(), modelToWorldMatLoc));
 		m_lights[i].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), worldToViewMatLoc));
@@ -963,14 +961,14 @@ bool EngineDemo::UglyDemoCode()
 		m_lights[i].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[i].GetMatPtr()->m_materialColor, tintColorLoc));
 		m_lights[i].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_lights[i].GetMatPtr()->m_materialColor, debugColorLoc));
 		m_lights[i].AddUniformData(Engine::UniformData(GL_FLOAT, &m_lights[i].GetMatPtr()->m_specularIntensity, tintIntensityLoc));
-		m_lights[i].SetTransMat(Engine::Mat4::Translation(Engine::Vec3(offset + 5.0f, LIGHT_HEIGHT, 5.0f)));
+		m_lights[i].SetTransMat(Engine::Mat4::Translation(Engine::Vec3(5.0f, LIGHT_HEIGHT, 5.0f)));
 		m_lights[i].GetMatPtr()->m_materialColor = Engine::Vec3(1.0f, 1.0f, 1.0f);
 		m_lights[i].GetMatPtr()->m_diffuseReflectivity = Engine::Vec3(1.0f, 1.0f, 1.0f);
 		Engine::RenderEngine::AddGraphicalObject(&m_lights[i]);
 		Engine::CollisionTester::AddGraphicalObject(&m_lights[i]);
 
 		Engine::ShapeGenerator::ReadSceneFile("..\\Data\\Scenes\\Ground.PN.Scene", &m_scenePlanes[i], m_shaderPrograms[3 + i].GetProgramId());
-		m_scenePlanes[i].SetTransMat(Engine::Mat4::Translation(Engine::Vec3(offset, 0.0f, 0.0f)));
+		m_scenePlanes[i].SetTransMat(Engine::Mat4::Translation(Engine::Vec3(0.0f, 0.0f, 0.0f)));
 		m_scenePlanes[i].SetScaleMat(Engine::Mat4::Scale(40.0f));
 		m_scenePlanes[i].AddPhongUniforms(modelToWorldMatLoc, worldToViewMatLoc, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), perspectiveMatLoc, m_perspective.GetPerspectivePtr(),
 			tintColorLoc, diffuseColorLoc, ambientColorLoc, specularColorLoc, specularPowerLoc, diffuseIntensityLoc, ambientIntensityLoc, specularIntensityLoc,
@@ -998,15 +996,13 @@ bool EngineDemo::UglyDemoCode()
 
 	for (int i = 0; i < NUM_DARGONS_TOTAL; ++i)
 	{
-		float offset = i < NUM_DARGONS_DEMO1 ? -DARGON_PLANE_OFFSET : DARGON_PLANE_OFFSET;
-
 		// use the shader based on the dargin group
 		Engine::ShapeGenerator::ReadSceneFile("..\\Data\\Scenes\\BetterDargon.PN.Scene", &m_demoObjects[i],
-												i < NUM_DARGONS_DEMO1 ? m_shaderPrograms[3].GetProgramId() : m_shaderPrograms[4].GetProgramId(), nullptr, false);
+												i < NUM_DARGONS_DEMO1 ? m_shaderPrograms[3].GetProgramId() : m_shaderPrograms[4].GetProgramId(), nullptr, i < NUM_DARGONS_DEMO1);
 
 		// move them and scale them
-		int k = i < NUM_DARGONS_DEMO1 ? i : i - NUM_DARGONS_DEMO1;
-		m_demoObjects[i].SetTransMat(Engine::Mat4::Translation(Engine::Vec3(offset + (k%DARGONS_PER_ROW - (DARGONS_PER_ROW/2 - 0.5f))*dargonSpacing, 10.0f, (k/DARGONS_PER_ROW- (DARGONS_PER_ROW / 2 - 0.5f))*dargonSpacing)));
+		int k = i % NUM_DARGONS_DEMO1;
+		m_demoObjects[i].SetTransMat(Engine::Mat4::Translation(Engine::Vec3((k%DARGONS_PER_ROW - (DARGONS_PER_ROW/2 - 0.5f))*dargonSpacing, 10.0f, (k/DARGONS_PER_ROW- (DARGONS_PER_ROW / 2 - 0.5f))*dargonSpacing)));
 		m_demoObjects[i].SetScaleMat(Engine::Mat4::Scale(2.0f));
 
 		// both sets of dargons need phong uniforms
