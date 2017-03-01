@@ -40,7 +40,7 @@ const int DARGONS_PER_ROW = 4;
 const int NUM_DARGONS_DEMO1 = DARGONS_PER_ROW * DARGONS_PER_ROW;
 const int NUM_DRAGONS_DEMO2 = DARGONS_PER_ROW * DARGONS_PER_ROW;
 const float DARGON_PLANE_OFFSET = 1000.0f;
-const float LIGHT_HEIGHT = 25.0f;
+const float LIGHT_HEIGHT = 15.0f;
 const float degreesPerSecond = 10.0f;
 const int NUM_SCENES = 6;
 const float SCENE_PLANE_SCALE = 10.0f;
@@ -134,6 +134,15 @@ float screenToTexWidth;
 float screenToTexHeight;
 
 Engine::Mat4 persp;
+
+float amplitude = 0.0f;
+float wavenumber = 0.0f;
+float velocity = 0.0f;
+float time = 0.0f;
+int ampLoc;
+int wavLoc;
+int velLoc;
+int timeLoc;
 
 bool EngineDemo::Initialize(Engine::MyWindow *window)
 {
@@ -264,6 +273,8 @@ void EngineDemo::Update(float dt)
 	player.Update(dt);
 
 	if (paused) { return; }
+
+	time += dt;
 
 	for (int i = 0; i < NUM_DEMO_OBJECTS; ++i)
 	{
@@ -579,6 +590,10 @@ bool EngineDemo::InitializeGL()
 	cycleHairModeLoc = m_shaderPrograms[5].GetUniformLocation("hairState");
 	explodeDistLoc = m_shaderPrograms[6].GetUniformLocation("explodeDist");
 	shadowMatrixLoc = m_shaderPrograms[3].GetUniformLocation("shadowMatrix");
+	velLoc = m_shaderPrograms[4].GetUniformLocation("velocity");
+	timeLoc = m_shaderPrograms[4].GetUniformLocation("time");
+	wavLoc = m_shaderPrograms[4].GetUniformLocation("wavenumber");
+	ampLoc = m_shaderPrograms[4].GetUniformLocation("amplitude");
 
 	if (Engine::MyGL::TestForError(Engine::MessageType::cFatal_Error, "InitializeGL errors!"))
 	{
@@ -639,13 +654,10 @@ bool EngineDemo::ProcessInput(float dt)
 	if (keyboardManager.KeyIsDown(VK_SHIFT)) { lineDelta *= -1.0f; }
 	if (keyboardManager.KeyIsDown('K')) { lineDelta *= 0.1f; }
 	if (keyboardManager.KeyWasPressed('J')) { lineWidth = Engine::MathUtility::Clamp(lineWidth + lineDelta, 0.0f, 6.0f); }
-	if (keyboardManager.KeyWasPressed('1')) { explodeDist += 1.0f; }
-	if (keyboardManager.KeyWasPressed('2')) { explodeDist -= 1.0f; }
 
-	if (keyboardManager.KeyWasPressed('3')) { SwapSubroutineIndex(&pSubIndex, 0, NUM_DARGONS_DEMO1); }
-	if (keyboardManager.KeyWasPressed('4')) { SwapFrameBuffers(); }
-	if (keyboardManager.KeyWasPressed('5')) { SwapSubroutineIndex(&pSubIndex, 0, NUM_DARGONS_DEMO1); SwapFrameBuffers(); }
-	if (keyboardManager.KeyWasPressed('6')) { plane = !plane; }
+
+	if (keyboardManager.KeyWasPressed('6')) { time = 0.0f; }
+
 
 	//if (keyboardManager.KeyWasPressed('0')) { HandleBitKeys(0); }
 	//if (keyboardManager.KeyWasPressed('2')) { HandleBitKeys(2); }
@@ -955,7 +967,7 @@ bool EngineDemo::UglyDemoCode()
 	m_grid.AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_grid.GetMatPtr()->m_materialColor, tintColorLoc));
 	m_grid.AddUniformData(Engine::UniformData(GL_FLOAT, &m_grid.GetMatPtr()->m_specularIntensity, tintIntensityLoc));
 	
-	Engine::ShapeGenerator::MakeTessalatedPlane(&m_demoObjects[0], Engine::Vec3(-50.0f, 0.0f, -50.0f), Engine::Vec3(50.0f, 0.0f, 50.0f), Engine::Vec3(50, 0, 50), m_shaderPrograms[4].GetProgramId());
+	Engine::ShapeGenerator::MakeTessalatedPlane(&m_demoObjects[0], Engine::Vec3(-50.0f, 0.0f, -50.0f), Engine::Vec3(50.0f, 0.0f, 50.0f), Engine::Vec3(250, 0, 250), m_shaderPrograms[4].GetProgramId());
 	Engine::RenderEngine::AddGraphicalObject(&m_demoObjects[0]);
 	m_demoObjects[0].AddPhongUniforms(modelToWorldMatLoc, worldToViewMatLoc, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), perspectiveMatLoc, m_perspective.GetPerspectivePtr()->GetAddress(),
 		tintColorLoc, diffuseColorLoc, ambientColorLoc, specularColorLoc, specularPowerLoc, diffuseIntensityLoc, ambientIntensityLoc, specularIntensityLoc,
@@ -965,12 +977,19 @@ bool EngineDemo::UglyDemoCode()
 	m_demoObjects[0].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_perspective.GetPerspectivePtr()->GetAddress(), perspectiveMatLoc));
 	m_demoObjects[0].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &m_demoObjects[0].GetMatPtr()->m_materialColor, tintColorLoc));
 	m_demoObjects[0].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, &vpm, vpmLoc));
-	m_demoObjects[0].GetMatPtr()->m_specularIntensity = 32.0f;
+	m_demoObjects[0].AddUniformData(Engine::UniformData(GL_FLOAT, &amplitude, ampLoc));
+	m_demoObjects[0].AddUniformData(Engine::UniformData(GL_FLOAT, &velocity, velLoc));
+	m_demoObjects[0].AddUniformData(Engine::UniformData(GL_FLOAT, &wavenumber, wavLoc));
+	m_demoObjects[0].AddUniformData(Engine::UniformData(GL_FLOAT, &time, timeLoc));
+	m_demoObjects[0].GetMatPtr()->m_specularIntensity = 16.0f;
 	m_demoObjects[0].GetMatPtr()->m_ambientReflectivity = Engine::Vec3(0.1f);
-	m_demoObjects[0].GetMatPtr()->m_diffuseReflectivity = Engine::Vec3(0.7f);
-	m_demoObjects[0].GetMatPtr()->m_specularReflectivity = Engine::Vec3(0.1f);
+	m_demoObjects[0].GetMatPtr()->m_diffuseReflectivity = Engine::Vec3(0.6f);
+	m_demoObjects[0].GetMatPtr()->m_specularReflectivity = Engine::Vec3(0.2f);
 	m_demoObjects[0].AddUniformData(Engine::UniformData(GL_FLOAT, &lineWidth, lineWidthLoc));
 	m_demoObjects[0].AddUniformData(Engine::UniformData(GL_FLOAT_VEC4, &lineColor, lineColorLoc));
+	wavenumber = 2 * Engine::MathUtility::PI / 10.0f;
+	velocity = 2.0f;
+	amplitude = 2.0f;
 
 	int i = 0;
 	Engine::ShapeGenerator::MakeLightingCube(&m_lights[i]);
