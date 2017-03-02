@@ -742,7 +742,7 @@ bool EngineDemo::ProcessInput(float dt)
 
 	if (keyboardManager.KeyWasPressed('6')) { time = 0.0f; }
 	if (keyboardManager.KeyWasPressed('7')) { drawDemoQuads = !drawDemoQuads; }
-	if (keyboardManager.KeyWasPressed('8')) { instanceCycleIndex = instanceCycleIndex + 1 % instanceCycles; }
+	if (keyboardManager.KeyWasPressed('8')) { instanceCycleIndex = (instanceCycleIndex + 1) % instanceCycles; }
 
 	//if (keyboardManager.KeyWasPressed('0')) { HandleBitKeys(0); }
 	//if (keyboardManager.KeyWasPressed('2')) { HandleBitKeys(2); }
@@ -1119,8 +1119,8 @@ bool EngineDemo::UglyDemoCode()
 	
 	for (int i = 0; i < howManyObjects * 3; i += 3)
 	{
-		float x = (i/6) % objectsX;
-		float y = (i/6) / objectsY;
+		float x = (float)((i/6) % objectsX);
+		float y = (float)((i/6) / objectsY);
 		pD[i + 0] = 1.0f - (2.0f * x / objectsX);
 		pD[i + 1] = 1.0f - (4.0f * y / objectsY); 
 		pD[i + 2] = 0.1f;
