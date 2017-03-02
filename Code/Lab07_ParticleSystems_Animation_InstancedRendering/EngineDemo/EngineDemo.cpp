@@ -3,6 +3,7 @@
 #include "MyWindow.h"
 #include <iostream>
 
+#include "InstanceBuffer.h"
 #include "MouseManager.h"
 #include "GameLogger.h"
 #include "MyGL.h"
@@ -150,7 +151,8 @@ Engine::Vec3 gravity;
 int gravityLoc;
 Engine::Vec3 darginVelocity;
 int darginVelLoc;
-
+bool drawDemoQuads = false;
+Engine::InstanceBuffer instanceBuffer;
 
 bool EngineDemo::Initialize(Engine::MyWindow *window)
 {
@@ -374,9 +376,11 @@ void EngineDemo::Draw()
 	// Clear window
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	m_demoObjects[2].SetEnabled(false);
 	m_demoObjects[1].SetEnabled(false);
 	Engine::RenderEngine::Draw();
 	m_demoObjects[1].SetEnabled(true);
+	m_demoObjects[2].SetEnabled(true);
 
 	glEnable(GL_BLEND);
 	glDisable(GL_DEPTH_TEST);
@@ -384,7 +388,10 @@ void EngineDemo::Draw()
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
 
-
+	if (drawDemoQuads)
+	{
+		Engine::RenderEngine::DrawInstanced(&m_demoObjects[2], &instanceBuffer);
+	}
 
 
 
@@ -548,9 +555,8 @@ bool EngineDemo::InitializeGL()
 
 	if (m_shaderPrograms[6].Initialize())
 	{					 
-		m_shaderPrograms[6].AddVertexShader("..\\Data\\Shaders\\Explode.vert.shader");
-		m_shaderPrograms[6].AddGeometryShader("..\\Data\\Shaders\\Explode.geom.shader");
-		m_shaderPrograms[6].AddFragmentShader("..\\Data\\Shaders\\Explode.frag.shader");
+		m_shaderPrograms[6].AddVertexShader("..\\Data\\Shaders\\DemoQuad.vert.shader");
+		m_shaderPrograms[6].AddFragmentShader("..\\Data\\Shaders\\DemoQuad.frag.shader");
 		m_shaderPrograms[6].LinkProgram();
 		m_shaderPrograms[6].UseProgram();
 	}
@@ -626,7 +632,7 @@ bool EngineDemo::InitializeGL()
 	//vColorLoc = m_shaderPrograms[5].GetUniformLocation("faceNormalColor");
 	//hairLengthLoc = m_shaderPrograms[5].GetUniformLocation("hairLength");
 	//cycleHairModeLoc = m_shaderPrograms[5].GetUniformLocation("hairState");
-	explodeDistLoc = m_shaderPrograms[6].GetUniformLocation("explodeDist");
+	//explodeDistLoc = m_shaderPrograms[6].GetUniformLocation("explodeDist");
 	shadowMatrixLoc = m_shaderPrograms[3].GetUniformLocation("shadowMatrix");
 	velLoc = m_shaderPrograms[4].GetUniformLocation("velocity");
 	timeLoc = m_shaderPrograms[4].GetUniformLocation("time");
@@ -698,7 +704,7 @@ bool EngineDemo::ProcessInput(float dt)
 
 
 	if (keyboardManager.KeyWasPressed('6')) { time = 0.0f; }
-
+	if (keyboardManager.KeyWasPressed('7')) { drawDemoQuads = !drawDemoQuads; }
 
 	//if (keyboardManager.KeyWasPressed('0')) { HandleBitKeys(0); }
 	//if (keyboardManager.KeyWasPressed('2')) { HandleBitKeys(2); }
@@ -750,7 +756,7 @@ void EngineDemo::ShowFrameRate(float dt)
 	}
 }
 
-void EngineDemo::DoFramebufferThing(int w1, int h1, int w2, int h2, int texID)
+void EngineDemo::DoFramebufferThing(int w1, int h1, int w2, int h2, int tId)
 {
 	const GLuint     unbindFbo = 0; // 0 unbinds fbo
 	GLint      srcX0 = 0;
@@ -764,7 +770,7 @@ void EngineDemo::DoFramebufferThing(int w1, int h1, int w2, int h2, int texID)
 	const GLbitfield mask = GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT;
 	const GLenum     filter = GL_NEAREST;
 
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, texID);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, tId);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, unbindFbo);
 	glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, destX0, destY0, destX1, destY1, mask, filter);
 }
@@ -1043,11 +1049,37 @@ bool EngineDemo::UglyDemoCode()
 	m_demoObjects[1].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &gravity, gravityLoc));
 	//m_demoObjects[1].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &darginVelocity, darginVelLoc));
 	m_demoObjects[1].AddUniformData(Engine::UniformData(GL_FLOAT, &time, timeLoc));
-	gravity = Engine::Vec3(0.0f, -2.0f, 0.0f);
+	gravity = Engine::Vec3(0.0f, -1.5f, 0.0f);
 	halfWidth = 1.0f;
 	lifeTime = 5.0f;
 	time = 0.0f;
 	texID = Engine::BitmapLoader::LoadTexture("..\\Data\\Textures\\fire.bmp");
+
+	Engine::ShapeGenerator::MakeDemoQuad(&m_demoObjects[2], m_shaderPrograms[6].GetProgramId());
+	Engine::RenderEngine::AddGraphicalObject(&m_demoObjects[2]);
+
+	int objectsX = 10;
+	int objectsY = 10;
+	int howManyObjects = objectsX * objectsY;
+	float *pD = new float[howManyObjects * 3];
+	
+	for (int i = 0; i < howManyObjects * 3; i += 3)
+	{
+		float x = (i/6) % objectsX;
+		float y = (i/6) / objectsY;
+		pD[i + 0] = 1.0f - (2.0f * x / objectsX);
+		pD[i + 1] = 1.0f - (4.0f * y / objectsY); 
+		pD[i + 2] = 0.1f;
+	}
+
+	//for (int i = 0; i < howManyObjects * 3; i += 3)
+	//{
+	//	Engine::GameLogger::Log(Engine::MessageType::ConsoleOnly, "%.3f, %.3f, %.3f\n", pD[i], pD[i+1], pD[i+2]);
+	//}
+
+	instanceBuffer.Initialize(pD, 3*sizeof(float), howManyObjects, 3);
+
+	delete[] pD;
 
 	int i = 0;
 	Engine::ShapeGenerator::MakeLightingCube(&m_lights[i]);

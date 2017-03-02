@@ -28,6 +28,7 @@ namespace Engine
 	Mesh ShapeGenerator::debugArrowMesh;
 	Mesh ShapeGenerator::horizontalPlaneMesh;
 	Mesh ShapeGenerator::nearPlaneMeshNDC;
+	Mesh ShapeGenerator::demoQuadMesh;
 	const char *ShapeGenerator::s_sceneFileNames[MAX_SCENE_FILES]{ nullptr };
 	Mesh *ShapeGenerator::s_sceneMeshes[MAX_SCENE_FILES]{ nullptr };
 	Mesh *ShapeGenerator::s_pPointMeshes[MAX_POINT_MESHES]{ nullptr };
@@ -608,6 +609,21 @@ namespace Engine
 		return true;
 	}
 
+	bool ShapeGenerator::MakeDemoQuad(GraphicalObject * pObject, GLuint shaderProgramID)
+	{
+		// TODO: SUPPORT MULTIPLE FRUSTUMS OF DIFFERENT SIZES!?!??! maybe not needed  - just pasted comment
+		static bool first = true;
+		if (!pObject) { GameLogger::Log(MessageType::cError, "ShapeGenerator failed to make a DemoQuad! Invalid graphical object pointer passed!\n"); return false; }
+
+		// only setup mesh the first time a shape of this type is being created, no wasted buffer space
+		if (first) { if (!SetupDemoQuad(shaderProgramID)) { return false; } first = false; }
+
+		pObject->SetMeshPointer(&demoQuadMesh);
+
+		GameLogger::Log(MessageType::Process, "ShapeGenerator made a DemoQuad!\n");
+		return true;
+	}
+
 	bool ShapeGenerator::Initialize(unsigned int pcShaderID, unsigned int pShaderID, unsigned int pnShaderID)
 	{
 		// set shaders to use
@@ -1117,6 +1133,30 @@ namespace Engine
 		}
 
 		GameLogger::Log(MessageType::Process, "ShapeGenerator successfully made a plane!\n");
+		return true;
+	}
+	
+	ColorVertex ShapeGenerator::demoQuadVerts[DEMOQUAD_VERTEX_COUNT] = {
+		Vec3{-0.05f, +0.05f, 0.0f}, Vec3{1.0f, 0.0f, 0.0f},
+		Vec3{ -0.05f, -0.05f, 0.0f }, Vec3{ 0.0f, 0.0f, 1.0f },
+		Vec3{ +0.05f, -0.05f, 0.0f }, Vec3{ 0.0f, 1.0f, 0.0f },
+
+		Vec3{-0.05f, +0.05f, 0.0f}, Vec3{1.0f, 0.0f, 0.0f},
+		Vec3{+0.05f, -0.05f, 0.0f}, Vec3{0.0f, 1.0f, 0.0f},
+		Vec3{+0.05f, +0.05f, 0.0f}, Vec3{0.0f, 1.0f, 1.0f}
+	};
+
+	bool ShapeGenerator::SetupDemoQuad(GLuint shaderProgramID)
+	{
+		demoQuadMesh = Mesh(DEMOQUAD_VERTEX_COUNT, 0, &demoQuadVerts[0], nullptr, GL_TRIANGLES, IndexSizeInBytes::Uint, shaderProgramID, VertexFormat::PositionColor, true);
+
+		if (!RenderEngine::AddMesh(&demoQuadMesh))
+		{
+			GameLogger::Log(MessageType::cError, "Could not add DemoQuad mesh!\n");
+			return false;
+		}
+
+		GameLogger::Log(MessageType::Process, "ShapeGenerator successfully made a DemoQuad!\n");
 		return true;
 	}
 

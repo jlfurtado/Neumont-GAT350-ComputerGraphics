@@ -49,6 +49,7 @@ namespace Engine
 		static bool CreatePoints(GraphicalObject *pObject, int numPoints, Vec3 upperLeftBound, Vec3 lowerRightBound, int shaderId, bool colorOn = false, Vec3 color = Vec3(0.0f));
 		static bool CreatePoints(GraphicalObject *pObject, int numPoints, float thetaMin, float thetaMax, float phiMin, float phiMax, float velMin, float velMax, float spawnRate, int shaderId);
 		static bool MakeNearPlanePlane(GraphicalObject * pObject, GLuint shaderProgramId);
+		static bool MakeDemoQuad(GraphicalObject *pObject, GLuint shaderProgramID);
 
 	private:
 		// methods
@@ -86,6 +87,7 @@ namespace Engine
 		static bool SetupDebugArrow(Vec3 topColor, Vec3 sideColor);
 		static bool SetupGridMesh(unsigned int widthInLines, unsigned int heightInLines, Vec3 color);
 		static bool SetupNearPlanePlane(GLuint shaderProgramId);
+		static bool SetupDemoQuad(GLuint shaderProgramID);
 
 		// data
 		static unsigned int s_PCShaderID;
@@ -140,6 +142,9 @@ namespace Engine
 		static const int NEARPLANENDC_INDEX_COUNT = 6;
 		static GLuint nearPlanePlaneIndices[NEARPLANENDC_INDEX_COUNT];
 
+		static const int DEMOQUAD_VERTEX_COUNT = 6;
+		static ColorVertex demoQuadVerts[DEMOQUAD_VERTEX_COUNT];
+
 		static Mesh debugCubeMesh;
 		static Mesh gridMesh;
 		static Mesh cubeMesh;
@@ -152,6 +157,7 @@ namespace Engine
 		static Mesh normalCubeMesh;
 		static Mesh frustumMesh;
 		static Mesh nearPlaneMeshNDC;
+		static Mesh demoQuadMesh;
 	};
 }
 

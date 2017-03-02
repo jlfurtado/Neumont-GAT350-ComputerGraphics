@@ -8,6 +8,7 @@
 #include "BufferGroup.h"
 #include "BufferInfo.h"
 #include "Mat4.h"
+#include "InstanceBuffer.h"
 
 // Justin Furtado
 // 7/14/2016
@@ -28,13 +29,14 @@ namespace Engine
 		static bool DrawSingleObjectDifferently(GraphicalObject *pGob, void *pPersp, void *pLook, void *pTexId, int lookLoc, int perspLoc, int texLoc);
 		static bool DrawSingleObjectRegularly(GraphicalObject * pGob);
 		static bool DrawSingleObjectWithDifferentMeshMode(GraphicalObject * pGob, GLenum meshMode);
+		static bool DrawInstanced(GraphicalObject *pGob, InstanceBuffer *pInstanceBuffer);
 		static void LogStats();
 
 	private:
 		static const int MAX_SHADER_PROGRAMS = 20;
 		static GLenum GetIndexType(IndexSizeInBytes indexSize);
-		static bool SetupDrawingEnvironment(BufferInfo *pBufferInfo);
-		static bool SetupAttribs(BufferInfo *pBufferInfo);
+		static bool SetupDrawingEnvironment(BufferInfo *pBufferInfo, int *outIndex = nullptr);
+		static bool SetupAttribs(BufferInfo *pBufferInfo, int *outIndex = nullptr);
 		static bool CopyShaderPrograms(ShaderProgram *pShaderPrograms, GLint shaderProgramCount);
 		static ShaderProgram *GetShaderProgramByID(GLint shaderProgramID);
 		static ShaderProgram s_shaderPrograms[MAX_SHADER_PROGRAMS];
