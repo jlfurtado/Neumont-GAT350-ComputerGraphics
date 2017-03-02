@@ -28,15 +28,16 @@ namespace Engine
 	Mesh ShapeGenerator::debugArrowMesh;
 	Mesh ShapeGenerator::horizontalPlaneMesh;
 	Mesh ShapeGenerator::nearPlaneMeshNDC;
-	Mesh ShapeGenerator::demoQuadMesh;
 	const char *ShapeGenerator::s_sceneFileNames[MAX_SCENE_FILES]{ nullptr };
 	Mesh *ShapeGenerator::s_sceneMeshes[MAX_SCENE_FILES]{ nullptr };
 	Mesh *ShapeGenerator::s_pPointMeshes[MAX_POINT_MESHES]{ nullptr };
+	Mesh *ShapeGenerator::s_demoQuadMeshes[MAX_QUAD_MESHES]{ nullptr };
 	Mesh *ShapeGenerator::s_pTessalatedPlanes[MAX_TESSALATED_PLANES]{ nullptr };
 	Vec3 ShapeGenerator::s_numTesselations[MAX_TESSALATED_PLANES];
 	int ShapeGenerator::s_nextSceneFile = 0;
 	int ShapeGenerator::s_nextPointMesh = 0;
 	int ShapeGenerator::s_nextTessalatedPlane = 0;
+	int ShapeGenerator::s_nextQuadMesh = 0;
 	unsigned int ShapeGenerator::s_PCShaderID = 0;
 	unsigned int ShapeGenerator::s_PShaderID = 0;
 	unsigned int ShapeGenerator::s_PNShaderID = 0;
@@ -613,10 +614,11 @@ namespace Engine
 	{
 		// TODO: SUPPORT MULTIPLE FRUSTUMS OF DIFFERENT SIZES!?!??! maybe not needed  - just pasted comment
 		if (!pObject) { GameLogger::Log(MessageType::cError, "ShapeGenerator failed to make a DemoQuad! Invalid graphical object pointer passed!\n"); return false; }
+		if (s_nextQuadMesh >= MAX_QUAD_MESHES) { Engine::GameLogger::Log(MessageType::cError, "Failed to make demo quad! Maximum exceeded!\n"); return false; }
 
 		// only setup mesh the first time a shape of this type is being created, no wasted buffer space
 		if (!SetupDemoQuad(shaderProgramID)) { return false; }
-		pObject->SetMeshPointer(&demoQuadMesh);
+		pObject->SetMeshPointer(s_demoQuadMeshes[s_nextQuadMesh - 1]); // one added
 
 		GameLogger::Log(MessageType::Process, "ShapeGenerator made a DemoQuad!\n");
 		return true;
@@ -659,6 +661,12 @@ namespace Engine
 		for (int i = 0; i < s_nextTessalatedPlane; ++i)
 		{
 			delete s_pTessalatedPlanes[i];
+		}
+
+		// clean up after demo quads planes
+		for (int i = 0; i < s_nextQuadMesh; ++i)
+		{
+			delete s_demoQuadMeshes[i];
 		}
 
 		if (!BitmapLoader::Shutdown())
@@ -1146,13 +1154,15 @@ namespace Engine
 
 	bool ShapeGenerator::SetupDemoQuad(GLuint shaderProgramID)
 	{
-		demoQuadMesh = Mesh(DEMOQUAD_VERTEX_COUNT, 0, &demoQuadVerts[0], nullptr, GL_TRIANGLES, IndexSizeInBytes::Uint, shaderProgramID, VertexFormat::PositionColor, true);
+		s_demoQuadMeshes[s_nextQuadMesh] = new Mesh(DEMOQUAD_VERTEX_COUNT, 0, &demoQuadVerts[0], nullptr, GL_TRIANGLES, IndexSizeInBytes::Uint, shaderProgramID, VertexFormat::PositionColor, true);
 
-		if (!RenderEngine::AddMesh(&demoQuadMesh))
+		if (!RenderEngine::AddMesh(s_demoQuadMeshes[s_nextQuadMesh]))
 		{
 			GameLogger::Log(MessageType::cError, "Could not add DemoQuad mesh!\n");
 			return false;
 		}
+
+		++s_nextQuadMesh;
 
 		GameLogger::Log(MessageType::Process, "ShapeGenerator successfully made a DemoQuad!\n");
 		return true;

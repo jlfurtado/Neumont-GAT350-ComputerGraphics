@@ -56,6 +56,7 @@ namespace Engine
 		static const int MAX_SCENE_FILES = 30;
 		static const int MAX_POINT_MESHES = 25;
 		static const int MAX_TESSALATED_PLANES = 5;
+		static const int MAX_QUAD_MESHES = 5;
 		static const char *s_sceneFileNames[MAX_SCENE_FILES];
 		static Mesh *s_sceneMeshes[MAX_SCENE_FILES];
 		static int s_nextSceneFile;
@@ -64,6 +65,8 @@ namespace Engine
 		static Mesh *s_pTessalatedPlanes[MAX_TESSALATED_PLANES];
 		static int s_nextTessalatedPlane;
 		static Vec3 s_numTesselations[MAX_TESSALATED_PLANES];
+		static Mesh *s_demoQuadMeshes[MAX_QUAD_MESHES];
+		static int s_nextQuadMesh;
 
 		static Mesh *FindMeshBySceneString(const char *const sceneName, bool cull, unsigned int shaderId);
 		static bool AddMesh(const char *const sceneName, Mesh *pMeshToAdd);
@@ -157,7 +160,6 @@ namespace Engine
 		static Mesh normalCubeMesh;
 		static Mesh frustumMesh;
 		static Mesh nearPlaneMeshNDC;
-		static Mesh demoQuadMesh;
 	};
 }
 
