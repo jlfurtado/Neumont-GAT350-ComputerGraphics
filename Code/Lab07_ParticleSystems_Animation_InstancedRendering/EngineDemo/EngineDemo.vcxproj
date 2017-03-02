@@ -160,6 +160,8 @@
   <ItemGroup>
     <None Include="..\Data\Shaders\AlphaDiscard.frag.shader" />
     <None Include="..\Data\Shaders\AlphaDiscard.vert.shader" />
+    <None Include="..\Data\Shaders\Asteroid.frag.shader" />
+    <None Include="..\Data\Shaders\Asteroid.vert.shader" />
     <None Include="..\Data\Shaders\Billboard.frag.shader" />
     <None Include="..\Data\Shaders\Billboard.geom.shader" />
     <None Include="..\Data\Shaders\Billboard.vert.shader" />

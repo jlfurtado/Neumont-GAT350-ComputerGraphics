@@ -170,6 +170,7 @@ int rowColLoc;
 int colColLoc;
 
 const int instanceCycles = 3;
+Engine::InstanceBuffer asteroids;
 
 bool EngineDemo::Initialize(Engine::MyWindow *window)
 {
@@ -423,6 +424,8 @@ void EngineDemo::Draw()
 		}
 	}
 
+	Engine::RenderEngine::DrawInstanced(&m_demoObjects[5], &asteroids);
+
 
 
 	/*if (plane)
@@ -557,8 +560,8 @@ bool EngineDemo::InitializeGL()
 
 	if (m_shaderPrograms[3].Initialize())
 	{					 
-		m_shaderPrograms[3].AddVertexShader("..\\Data\\Shaders\\Shadows.vert.shader");
-		m_shaderPrograms[3].AddFragmentShader("..\\Data\\Shaders\\Shadows.frag.shader");
+		m_shaderPrograms[3].AddVertexShader("..\\Data\\Shaders\\Asteroid.vert.shader");
+		m_shaderPrograms[3].AddFragmentShader("..\\Data\\Shaders\\Asteroid.frag.shader");
 		m_shaderPrograms[3].LinkProgram();
 		m_shaderPrograms[3].UseProgram();
 	}
@@ -631,9 +634,9 @@ bool EngineDemo::InitializeGL()
 	perspectiveMatLoc = m_shaderPrograms[4].GetUniformLocation("projection");
 	lightLoc = m_shaderPrograms[4].GetUniformLocation("lightPos_WorldSpace");
 	cameraPosLoc = m_shaderPrograms[4].GetUniformLocation("cameraPosition_WorldSpace");
-	subOneIndex = m_shaderPrograms[3].GetSubroutineIndex(GL_FRAGMENT_SHADER, "RecordDepth");
-	subTwoIndex = m_shaderPrograms[3].GetSubroutineIndex(GL_FRAGMENT_SHADER, "PhongWithShadow");
-	subThreeIndex = m_shaderPrograms[3].GetSubroutineIndex(GL_FRAGMENT_SHADER, "PhongWithShadowAverage");
+	//subOneIndex = m_shaderPrograms[3].GetSubroutineIndex(GL_FRAGMENT_SHADER, "RecordDepth");
+	//subTwoIndex = m_shaderPrograms[3].GetSubroutineIndex(GL_FRAGMENT_SHADER, "PhongWithShadow");
+	//subThreeIndex = m_shaderPrograms[3].GetSubroutineIndex(GL_FRAGMENT_SHADER, "PhongWithShadowAverage");
 	//edgeSubIndex = m_shaderPrograms[4].GetSubroutineIndex(GL_GEOMETRY_SHADER, "DoEdges");
 	//passSubIndex = m_shaderPrograms[4].GetSubroutineIndex(GL_GEOMETRY_SHADER, "PassThrough");
 	//finalSubIndex = m_shaderPrograms[4].GetSubroutineIndex(GL_FRAGMENT_SHADER, "FinalPass");
@@ -650,7 +653,7 @@ bool EngineDemo::InitializeGL()
 	//fogMaxLoc = m_shaderPrograms[9].GetUniformLocation("fog.maxDist");
 	//fogColorLoc = m_shaderPrograms[9].GetUniformLocation("fog.color");
 	//mossLoc = m_shaderPrograms[3].GetUniformLocation("mossSampler");
-	brickLoc = m_shaderPrograms[3].GetUniformLocation("shadowMap");
+	//brickLoc = m_shaderPrograms[3].GetUniformLocation("shadowMap");
 	halfWidthLoc = m_shaderPrograms[5].GetUniformLocation("halfWidth");
 	//repeatScaleLoc = m_shaderPrograms[3].GetUniformLocation("repeatScale");
 	//numIterationsLoc = m_shaderPrograms[3].GetUniformLocation("numIterations");
@@ -663,7 +666,7 @@ bool EngineDemo::InitializeGL()
 	//hairLengthLoc = m_shaderPrograms[5].GetUniformLocation("hairLength");
 	//cycleHairModeLoc = m_shaderPrograms[5].GetUniformLocation("hairState");
 	//explodeDistLoc = m_shaderPrograms[6].GetUniformLocation("explodeDist");
-	shadowMatrixLoc = m_shaderPrograms[3].GetUniformLocation("shadowMatrix");
+	//shadowMatrixLoc = m_shaderPrograms[3].GetUniformLocation("shadowMatrix");
 	velLoc = m_shaderPrograms[4].GetUniformLocation("velocity");
 	timeLoc = m_shaderPrograms[4].GetUniformLocation("time");
 	wavLoc = m_shaderPrograms[4].GetUniformLocation("wavenumber");
@@ -1134,6 +1137,46 @@ bool EngineDemo::UglyDemoCode()
 	instanceBuffer.Initialize(pD, 3*sizeof(float), howManyObjects, 3);
 
 	delete[] pD;
+
+	Engine::ShapeGenerator::ReadSceneFile("..\\Data\\Scenes\\Dargon.PT.scene", &m_demoObjects[5], m_shaderPrograms[3].GetProgramId(), "..\\Data\\Textures\\DargonSkin.bmp");
+	Engine::RenderEngine::AddGraphicalObject(&m_demoObjects[5]);
+	m_demoObjects[5].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_demoObjects[5].GetFullTransformPtr()->GetAddress(), modelToWorldMatLoc));
+	m_demoObjects[5].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), worldToViewMatLoc));
+	m_demoObjects[5].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_perspective.GetPerspectivePtr()->GetAddress(), perspectiveMatLoc));
+	m_demoObjects[5].AddUniformData(Engine::UniformData(GL_TEXTURE0, m_demoObjects[5].GetMeshPointer()->GetTextureIDPtr(), texLoc));
+	m_demoObjects[5].SetRotationAxis(Engine::Vec3(0.4f, 0.6f, 0.8f));
+	m_demoObjects[5].SetRotationRate(Engine::MathUtility::ToRadians(18.0f));
+
+	GLuint amount = 100;
+	Engine::Mat4* modelMatrices;
+	modelMatrices = new Engine::Mat4[amount]{ Engine::Mat4() };
+	GLfloat radius = 500.0f;
+	GLfloat offset = 20.5f;
+	for (GLuint i = 0; i < amount; i++)
+	{
+		Engine::Mat4 model;
+
+		GLfloat angle = (GLfloat)i / (GLfloat)amount * 360.0f;
+		GLfloat displacement = (rand() % (GLint)(2 * offset * 100)) / 100.0f - offset;
+		GLfloat x = sin(angle) * radius + displacement;
+		displacement = (rand() % (GLint)(2 * offset * 100)) / 100.0f - offset;
+		GLfloat y = displacement * 0.4f; // y value has smaller displacement
+		displacement = (rand() % (GLint)(2 * offset * 100)) / 100.0f - offset;
+		GLfloat z = cos(angle) * radius + displacement;
+		model = model * Engine::Mat4::Translation(Engine::Vec3(x, y, z));
+
+		GLfloat scale = (rand() % 20) / 100.0f + 0.05f;
+		model = model * Engine::Mat4::Scale(scale * 50.0f);
+
+		GLfloat rotAngle = (float)(rand() % 360);
+		model = model * Engine::Mat4::RotationAroundAxis(Engine::Vec3(0.4f, 0.6f, 0.8f), rotAngle);
+		
+		modelMatrices[i] = model;
+	}
+
+	asteroids.Initialize(modelMatrices, 16*sizeof(float), amount, 16 * amount);
+
+	delete[] modelMatrices;
 
 	int i = 0;
 	Engine::ShapeGenerator::MakeLightingCube(&m_lights[i]);

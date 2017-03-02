@@ -240,6 +240,12 @@
     <None Include="..\Data\Shaders\DemoQuad3.vert.shader">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="..\Data\Shaders\Asteroid.frag.shader">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Data\Shaders\Asteroid.vert.shader">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EngineDemo.h">

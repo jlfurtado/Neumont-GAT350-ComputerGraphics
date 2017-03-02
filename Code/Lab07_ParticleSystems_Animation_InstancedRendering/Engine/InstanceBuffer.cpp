@@ -1,6 +1,7 @@
 #include "InstanceBuffer.h"
 #include "MyGL.h"
 #include "GameLogger.h"
+#include "Vec4.h"
 
 // Justin Furtado
 // 3/1/2017
@@ -16,7 +17,7 @@ namespace Engine
 		m_count = count;
 		m_numFloats = numFloats;
 
-		int bufferSize = m_stride * m_count * m_numFloats;
+		int bufferSize = m_stride * m_count;
 
 		// Generate the buffer and check for errors
 		glGenBuffers(1, &m_bufferID);
@@ -56,11 +57,37 @@ namespace Engine
 
 	bool InstanceBuffer::SetupAttrib(int attribIndex)
 	{
-		glEnableVertexAttribArray(attribIndex);
 		glBindBuffer(GL_ARRAY_BUFFER, m_bufferID);
-		glVertexAttribPointer(attribIndex, m_numFloats, GL_FLOAT, GL_FALSE, m_stride, (GLvoid*)0);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glVertexAttribDivisor(attribIndex, 1);
+
+		if (m_numFloats < 16)
+		{
+			glEnableVertexAttribArray(attribIndex);
+			glVertexAttribPointer(attribIndex, m_numFloats, GL_FLOAT, GL_FALSE, m_stride, (GLvoid*)0);
+			glVertexAttribDivisor(attribIndex, 1);
+		}
+		else
+		{
+			// Vertex Attributes
+			GLsizei vec4Size = 4*sizeof(float);
+			glEnableVertexAttribArray(attribIndex+0);
+			glVertexAttribPointer(attribIndex + 0, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (GLvoid*)0);
+			glEnableVertexAttribArray(attribIndex+1);
+			glVertexAttribPointer(attribIndex + 1, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (GLvoid*)(vec4Size));
+			glEnableVertexAttribArray(attribIndex+2);
+			glVertexAttribPointer(attribIndex + 2, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (GLvoid*)(2 * vec4Size));
+			glEnableVertexAttribArray(attribIndex+3);
+			glVertexAttribPointer(attribIndex + 3, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (GLvoid*)(3 * vec4Size));
+
+			glVertexAttribDivisor(attribIndex + 0, 1);
+			glVertexAttribDivisor(attribIndex + 1, 1);
+			glVertexAttribDivisor(attribIndex + 2, 1);
+			glVertexAttribDivisor(attribIndex + 3, 1);
+		}
+
+		glBindVertexArray(0);
+
+
 		return MyGL::TestForError(MessageType::cError, "InstanceBufferSetupAttrib errors!");
+
 	}
 }
