@@ -47,6 +47,7 @@ namespace Engine
 		static bool MakeSphere(GraphicalObject *pObject, Vec3 color);
 		static bool ReadSceneFile(const char *fileName, GraphicalObject *pObject, GLuint shaderProgramID, const char *texturePath = nullptr, bool cullObject = true);
 		static bool CreatePoints(GraphicalObject *pObject, int numPoints, Vec3 upperLeftBound, Vec3 lowerRightBound, int shaderId, bool colorOn = false, Vec3 color = Vec3(0.0f));
+		static bool CreatePoints(GraphicalObject *pObject, int numPoints, float thetaMin, float thetaMax, float phiMin, float phiMax, float velMin, float velMax, float spawnRate, int shaderId);
 		static bool MakeNearPlanePlane(GraphicalObject * pObject, GLuint shaderProgramId);
 
 	private:

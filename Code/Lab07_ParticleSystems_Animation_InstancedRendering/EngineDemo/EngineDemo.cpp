@@ -143,6 +143,14 @@ int ampLoc;
 int wavLoc;
 int velLoc;
 int timeLoc;
+int texID;
+int lifeTimeLoc;
+float lifeTime;
+Engine::Vec3 gravity;
+int gravityLoc;
+Engine::Vec3 darginVelocity;
+int darginVelLoc;
+
 
 bool EngineDemo::Initialize(Engine::MyWindow *window)
 {
@@ -344,6 +352,20 @@ void EngineDemo::Update(float dt)
 	fractalSeed.GetAddress()[1] += fsy.GetX() * dt; if (fractalSeed.GetY() < fsy.GetY()) { fractalSeed.GetAddress()[1] = fsy.GetY(); fsy.GetAddress()[0] *= -1.0f; } if (fractalSeed.GetY() > fsy.GetZ()) { fractalSeed.GetAddress()[1] = fsy.GetZ(); fsy.GetAddress()[0] *= -1.0f; }
 
 	vpm = Engine::Mat4::ViewPort((float)m_pWindow->width(), 0.0f, (float)m_pWindow->height(), 0.0f, RENDER_DISTANCE, m_perspective.GetNearDist());
+	Engine::Vec3 darginForward = playerGraphicalObject.GetRotMat() * Engine::Vec3(0.0f, 0.0f, -1.0f);
+	Engine::Vec3 darginRight = playerGraphicalObject.GetRotMat() * Engine::Vec3(1.0f, 0.0f, 0.0f);
+	Engine::Vec3 darginUp = playerGraphicalObject.GetRotMat() * Engine::Vec3(0.0f, 1.0f, 0.0f);
+
+	m_demoObjects[1].SetTransMat(Engine::Mat4::Translation(playerGraphicalObject.GetPos() + 5.0f * darginForward + 7.0f * darginUp));
+	Engine::Vec3 up = Engine::Vec3(0.0f, 1.0f, 0.0f);
+	Engine::Mat4 rotationMatrix = Engine::Mat4::RotationAroundAxis(up.Cross(darginForward), Engine::MathUtility::GetVectorAngleRadians(darginForward, up));
+	m_demoObjects[1].SetRotMat(rotationMatrix);
+	m_demoObjects[1].CalcFullTransform();
+
+
+	static Engine::Vec3 lastPos;
+	darginVelocity = (playerGraphicalObject.GetPos() - lastPos) / dt;
+	lastPos = playerGraphicalObject.GetPos();
 
 }
 
@@ -352,8 +374,19 @@ void EngineDemo::Draw()
 	// Clear window
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
+	m_demoObjects[1].SetEnabled(false);
 	Engine::RenderEngine::Draw();
+	m_demoObjects[1].SetEnabled(true);
+
+	glEnable(GL_BLEND);
+	glDisable(GL_DEPTH_TEST);
+	Engine::RenderEngine::DrawSingleObjectRegularly(&m_demoObjects[1]);
+	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_BLEND);
+
+
+
+
 
 	/*if (plane)
 	{
@@ -454,6 +487,11 @@ bool EngineDemo::InitializeGL()
 	glCullFace(GL_BACK);
 	glFrontFace(GL_CCW);
 
+	// TODO: enable and disable!?!?!
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+
 	glClearStencil(0);
 
 	if (m_shaderPrograms[0].Initialize())
@@ -500,9 +538,9 @@ bool EngineDemo::InitializeGL()
 
 	if (m_shaderPrograms[5].Initialize())
 	{					 
-		m_shaderPrograms[5].AddVertexShader("..\\Data\\Shaders\\NormalHair.vert.shader");
-		m_shaderPrograms[5].AddGeometryShader("..\\Data\\Shaders\\NormalHair.geom.shader");
-		m_shaderPrograms[5].AddFragmentShader("..\\Data\\Shaders\\NormalHair.frag.shader");
+		m_shaderPrograms[5].AddVertexShader("..\\Data\\Shaders\\ParticleFountain.vert.shader");
+		m_shaderPrograms[5].AddGeometryShader("..\\Data\\Shaders\\ParticleFountain.geom.shader");
+		m_shaderPrograms[5].AddFragmentShader("..\\Data\\Shaders\\ParticleFountain.frag.shader");
 		m_shaderPrograms[5].LinkProgram();
 		m_shaderPrograms[5].UseProgram();
 	}
@@ -577,23 +615,26 @@ bool EngineDemo::InitializeGL()
 	//fogColorLoc = m_shaderPrograms[9].GetUniformLocation("fog.color");
 	//mossLoc = m_shaderPrograms[3].GetUniformLocation("mossSampler");
 	brickLoc = m_shaderPrograms[3].GetUniformLocation("shadowMap");
-	//halfWidthLoc = m_shaderPrograms[3].GetUniformLocation("halfWidth");
+	halfWidthLoc = m_shaderPrograms[5].GetUniformLocation("halfWidth");
 	//repeatScaleLoc = m_shaderPrograms[3].GetUniformLocation("repeatScale");
 	//numIterationsLoc = m_shaderPrograms[3].GetUniformLocation("numIterations");
 	//shaderOffsetLoc = m_shaderPrograms[3].GetUniformLocation("randomValue");
 	vpmLoc = m_shaderPrograms[4].GetUniformLocation("viewportMatrix");
 	lineWidthLoc = m_shaderPrograms[4].GetUniformLocation("lineInfo.width");
 	lineColorLoc = m_shaderPrograms[4].GetUniformLocation("lineInfo.color");
-	fColorLoc = m_shaderPrograms[5].GetUniformLocation("vertexNormalColor");
-	vColorLoc = m_shaderPrograms[5].GetUniformLocation("faceNormalColor");
-	hairLengthLoc = m_shaderPrograms[5].GetUniformLocation("hairLength");
-	cycleHairModeLoc = m_shaderPrograms[5].GetUniformLocation("hairState");
+	//fColorLoc = m_shaderPrograms[5].GetUniformLocation("vertexNormalColor");
+	//vColorLoc = m_shaderPrograms[5].GetUniformLocation("faceNormalColor");
+	//hairLengthLoc = m_shaderPrograms[5].GetUniformLocation("hairLength");
+	//cycleHairModeLoc = m_shaderPrograms[5].GetUniformLocation("hairState");
 	explodeDistLoc = m_shaderPrograms[6].GetUniformLocation("explodeDist");
 	shadowMatrixLoc = m_shaderPrograms[3].GetUniformLocation("shadowMatrix");
 	velLoc = m_shaderPrograms[4].GetUniformLocation("velocity");
 	timeLoc = m_shaderPrograms[4].GetUniformLocation("time");
 	wavLoc = m_shaderPrograms[4].GetUniformLocation("wavenumber");
 	ampLoc = m_shaderPrograms[4].GetUniformLocation("amplitude");
+	lifeTimeLoc = m_shaderPrograms[5].GetUniformLocation("uParticleLifetime");
+	gravityLoc = m_shaderPrograms[5].GetUniformLocation("uGravity");
+	//darginVelLoc = m_shaderPrograms[5].GetUniformLocation("velocityOffset");
 
 	if (Engine::MyGL::TestForError(Engine::MessageType::cFatal_Error, "InitializeGL errors!"))
 	{
@@ -981,15 +1022,32 @@ bool EngineDemo::UglyDemoCode()
 	m_demoObjects[0].AddUniformData(Engine::UniformData(GL_FLOAT, &velocity, velLoc));
 	m_demoObjects[0].AddUniformData(Engine::UniformData(GL_FLOAT, &wavenumber, wavLoc));
 	m_demoObjects[0].AddUniformData(Engine::UniformData(GL_FLOAT, &time, timeLoc));
-	m_demoObjects[0].GetMatPtr()->m_specularIntensity = 16.0f;
+	m_demoObjects[0].GetMatPtr()->m_specularIntensity = 8.0f;
 	m_demoObjects[0].GetMatPtr()->m_ambientReflectivity = Engine::Vec3(0.1f);
 	m_demoObjects[0].GetMatPtr()->m_diffuseReflectivity = Engine::Vec3(0.6f);
-	m_demoObjects[0].GetMatPtr()->m_specularReflectivity = Engine::Vec3(0.2f);
+	m_demoObjects[0].GetMatPtr()->m_specularReflectivity = Engine::Vec3(0.3f);
 	m_demoObjects[0].AddUniformData(Engine::UniformData(GL_FLOAT, &lineWidth, lineWidthLoc));
 	m_demoObjects[0].AddUniformData(Engine::UniformData(GL_FLOAT_VEC4, &lineColor, lineColorLoc));
 	wavenumber = 2 * Engine::MathUtility::PI / 10.0f;
 	velocity = 2.0f;
 	amplitude = 2.0f;
+
+	Engine::ShapeGenerator::CreatePoints(&m_demoObjects[1], 25000, 0.0f, Engine::MathUtility::ToRadians(30.0f), 0.0f, Engine::MathUtility::ToRadians(360.0f), 12.0f, 15.0f, 0.00035f, m_shaderPrograms[5].GetProgramId());
+	Engine::RenderEngine::AddGraphicalObject(&m_demoObjects[1]);
+	m_demoObjects[1].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_demoObjects[1].GetFullTransformPtr(), modelToWorldMatLoc));
+	m_demoObjects[1].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, playerCamera.GetWorldToViewMatrixPtr()->GetAddress(), worldToViewMatLoc));
+	m_demoObjects[1].AddUniformData(Engine::UniformData(GL_FLOAT_MAT4, m_perspective.GetPerspectivePtr()->GetAddress(), perspectiveMatLoc));
+	m_demoObjects[1].AddUniformData(Engine::UniformData(GL_FLOAT, &halfWidth, halfWidthLoc));
+	m_demoObjects[1].AddUniformData(Engine::UniformData(GL_TEXTURE0, &texID, texLoc));
+	m_demoObjects[1].AddUniformData(Engine::UniformData(GL_FLOAT, &lifeTime, lifeTimeLoc));
+	m_demoObjects[1].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &gravity, gravityLoc));
+	//m_demoObjects[1].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &darginVelocity, darginVelLoc));
+	m_demoObjects[1].AddUniformData(Engine::UniformData(GL_FLOAT, &time, timeLoc));
+	gravity = Engine::Vec3(0.0f, -2.0f, 0.0f);
+	halfWidth = 1.0f;
+	lifeTime = 5.0f;
+	time = 0.0f;
+	texID = Engine::BitmapLoader::LoadTexture("..\\Data\\Textures\\fire.bmp");
 
 	int i = 0;
 	Engine::ShapeGenerator::MakeLightingCube(&m_lights[i]);

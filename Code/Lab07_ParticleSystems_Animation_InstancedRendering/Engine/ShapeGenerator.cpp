@@ -554,6 +554,45 @@ namespace Engine
 		return true; 
 	}
 
+	// overload for sphere
+	bool ShapeGenerator::CreatePoints(GraphicalObject * pObject, int numPoints, float thetaMin, float thetaMax, float phiMin, float phiMax, float velMin, float velMax, float spawnRate, int shaderId)
+	{
+		// validate inputs and prerequisites for creating mesh
+		if (numPoints <= 0) { GameLogger::Log(MessageType::cWarning, "Tried to generate zero or less points!\n"); return false; }
+		if (s_nextPointMesh >= MAX_POINT_MESHES) { GameLogger::Log(MessageType::cError, "Could not Create [%d] points in sphere! Maximum number of point meshes [%d] would be exceeded!\n", numPoints, MAX_POINT_MESHES); return false; }
+
+		// create the mesh
+		int stride = 5;
+		int numFloats = numPoints * stride;// numVerts = numPoints for position only, double for position color
+		float *pVerts = new float[numFloats];
+		float time = 0.0f;
+		for (int i = 0; i < numFloats; i += stride)
+		{
+			float phi = MathUtility::Rand(phiMin, phiMax);
+			float theta = MathUtility::Rand(thetaMin, thetaMax);
+			float vel = MathUtility::Rand(velMin, velMax);
+
+			pVerts[i + 0] = vel*sinf(theta)*cosf(phi); // x
+			pVerts[i + 1] = vel*cosf(theta); // y
+			pVerts[i + 2] = vel*sinf(theta)*sinf(phi); // z
+			pVerts[i + 3] = time; // spawn time
+			pVerts[i + 4] = time; // NOT USED
+			time += spawnRate;
+		}
+
+		// make the mesh
+		s_pPointMeshes[s_nextPointMesh] = new Mesh(numPoints, 0, pVerts, nullptr, GL_POINTS, IndexSizeInBytes::Uint, shaderId, VertexFormat::PositionTexture, false);
+
+		// add the mesh to the render engine
+		if (!Engine::RenderEngine::AddMesh(s_pPointMeshes[s_nextPointMesh])) { Engine::GameLogger::Log(MessageType::cError, "Failed to add points mesh to render engine!\n"); return false; }
+
+		// if it succeeded, point to it, increment counter and indicate success
+		pObject->SetMeshPointer(s_pPointMeshes[s_nextPointMesh]);
+		s_nextPointMesh++;
+		GameLogger::Log(MessageType::Process, "CreatePoints made [%d] in a sphere!\n", numPoints);//, upperLeftBound.GetX(), upperLeftBound.GetY(), upperLeftBound.GetZ(), lowerRightBound.GetX(), lowerRightBound.GetY(), lowerRightBound.GetZ());
+		return true;
+	}
+
 	bool ShapeGenerator::MakeNearPlanePlane(GraphicalObject * pObject, GLuint shaderProgramId)
 	{
 		// TODO: SUPPORT MULTIPLE FRUSTUMS OF DIFFERENT SIZES!?!??! maybe not needed  - just pasted comment

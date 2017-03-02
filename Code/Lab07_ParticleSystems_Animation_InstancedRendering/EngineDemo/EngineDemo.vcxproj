@@ -191,6 +191,9 @@
     <None Include="..\Data\Shaders\NormalHair.vert.shader" />
     <None Include="..\Data\Shaders\NormalMapPhong.frag.shader" />
     <None Include="..\Data\Shaders\NormalMapPhong.vert.shader" />
+    <None Include="..\Data\Shaders\ParticleFountain.frag.shader" />
+    <None Include="..\Data\Shaders\ParticleFountain.geom.shader" />
+    <None Include="..\Data\Shaders\ParticleFountain.vert.shader" />
     <None Include="..\Data\Shaders\PC.frag.shader" />
     <None Include="..\Data\Shaders\PC.vert.shader" />
     <None Include="..\Data\Shaders\Phong.vert.shader" />
