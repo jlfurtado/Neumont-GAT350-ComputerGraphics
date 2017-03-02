@@ -234,6 +234,12 @@
     <None Include="..\Data\Shaders\DemoQuad2.vert.shader">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="..\Data\Shaders\DemoQuad3.frag.shader">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Data\Shaders\DemoQuad3.vert.shader">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EngineDemo.h">

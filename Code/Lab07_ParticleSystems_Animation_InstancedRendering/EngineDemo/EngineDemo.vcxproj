@@ -171,6 +171,8 @@
     <None Include="..\Data\Shaders\DemoQuad.vert.shader" />
     <None Include="..\Data\Shaders\DemoQuad2.frag.shader" />
     <None Include="..\Data\Shaders\DemoQuad2.vert.shader" />
+    <None Include="..\Data\Shaders\DemoQuad3.frag.shader" />
+    <None Include="..\Data\Shaders\DemoQuad3.vert.shader" />
     <None Include="..\Data\Shaders\Diffuse.frag.shader" />
     <None Include="..\Data\Shaders\Diffuse.vert.shader" />
     <None Include="..\Data\Shaders\DiffuseFunctions.frag.shader" />

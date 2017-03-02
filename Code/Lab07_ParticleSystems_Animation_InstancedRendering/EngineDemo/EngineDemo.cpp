@@ -152,7 +152,7 @@ int gravityLoc;
 Engine::Vec3 darginVelocity;
 int darginVelLoc;
 bool drawDemoQuads = false;
-bool doInBuffer = true;
+int instanceCycleIndex = 0;
 Engine::InstanceBuffer instanceBuffer;
 
 int numRows = 10;
@@ -163,6 +163,13 @@ float width = 0.5f;
 float height = 0.5f;
 int widthLoc;
 int heightLoc;
+
+Engine::Vec3 rowColor(1.0f);
+Engine::Vec3 columnColor(0.0f);
+int rowColLoc;
+int colColLoc;
+
+const int instanceCycles = 3;
 
 bool EngineDemo::Initialize(Engine::MyWindow *window)
 {
@@ -402,13 +409,17 @@ void EngineDemo::Draw()
 
 	if (drawDemoQuads)
 	{
-		if (doInBuffer)
+		if (instanceCycleIndex == 0)
 		{
 			Engine::RenderEngine::DrawInstanced(&m_demoObjects[2], &instanceBuffer);
 		}
-		else
+		else if (instanceCycleIndex == 1)
 		{
 			Engine::RenderEngine::DrawInstanced(&m_demoObjects[3], numRows * numColumns);
+		}
+		else if (instanceCycleIndex == 2)
+		{
+			Engine::RenderEngine::DrawInstanced(&m_demoObjects[4], numRows * numColumns);
 		}
 	}
 
@@ -590,8 +601,8 @@ bool EngineDemo::InitializeGL()
 
 	if (m_shaderPrograms[8].Initialize())
 	{					 
-		m_shaderPrograms[8].AddVertexShader("..\\Data\\Shaders\\CelPhong.vert.shader");
-		m_shaderPrograms[8].AddFragmentShader("..\\Data\\Shaders\\CelPhong.frag.shader");
+		m_shaderPrograms[8].AddVertexShader("..\\Data\\Shaders\\DemoQuad3.vert.shader");
+		m_shaderPrograms[8].AddFragmentShader("..\\Data\\Shaders\\DemoQuad3.frag.shader");
 		m_shaderPrograms[8].LinkProgram();
 		m_shaderPrograms[8].UseProgram();
 	}
@@ -634,7 +645,7 @@ bool EngineDemo::InitializeGL()
 	//directionalPositionLoc = m_shaderPrograms[3].GetUniformLocation("objectCenterPosition_WorldSpace");
 	//lightsMin = m_shaderPrograms[6].GetUniformLocation("lights[0].positionEye");
 	//spotMin = m_shaderPrograms[7].GetUniformLocation("spotLight.positionEye");
-	levelsLoc = m_shaderPrograms[8].GetUniformLocation("numLevels");
+	//levelsLoc = m_shaderPrograms[8].GetUniformLocation("numLevels");
 	//fogMinLoc = m_shaderPrograms[9].GetUniformLocation("fog.minDist");
 	//fogMaxLoc = m_shaderPrograms[9].GetUniformLocation("fog.maxDist");
 	//fogColorLoc = m_shaderPrograms[9].GetUniformLocation("fog.color");
@@ -665,6 +676,8 @@ bool EngineDemo::InitializeGL()
 	heightLoc = m_shaderPrograms[7].GetUniformLocation("height");
 	rowsLoc = m_shaderPrograms[7].GetUniformLocation("numRows");
 	columnsLoc = m_shaderPrograms[7].GetUniformLocation("numColumns");
+	rowColLoc = m_shaderPrograms[8].GetUniformLocation("rowColor");
+	colColLoc = m_shaderPrograms[8].GetUniformLocation("columnColor");
 
 	if (Engine::MyGL::TestForError(Engine::MessageType::cFatal_Error, "InitializeGL errors!"))
 	{
@@ -729,7 +742,7 @@ bool EngineDemo::ProcessInput(float dt)
 
 	if (keyboardManager.KeyWasPressed('6')) { time = 0.0f; }
 	if (keyboardManager.KeyWasPressed('7')) { drawDemoQuads = !drawDemoQuads; }
-	if (keyboardManager.KeyWasPressed('8')) { doInBuffer = !doInBuffer; }
+	if (keyboardManager.KeyWasPressed('8')) { instanceCycleIndex = instanceCycleIndex + 1 % instanceCycles; }
 
 	//if (keyboardManager.KeyWasPressed('0')) { HandleBitKeys(0); }
 	//if (keyboardManager.KeyWasPressed('2')) { HandleBitKeys(2); }
@@ -1089,6 +1102,15 @@ bool EngineDemo::UglyDemoCode()
 	m_demoObjects[3].AddUniformData(Engine::UniformData(GL_FLOAT, &height, heightLoc));
 	m_demoObjects[3].AddUniformData(Engine::UniformData(GL_INT, &numRows, rowsLoc));
 	m_demoObjects[3].AddUniformData(Engine::UniformData(GL_INT, &numColumns, columnsLoc));
+
+	Engine::ShapeGenerator::MakeDemoQuad(&m_demoObjects[4], m_shaderPrograms[8].GetProgramId());
+	Engine::RenderEngine::AddGraphicalObject(&m_demoObjects[4]);
+	m_demoObjects[4].AddUniformData(Engine::UniformData(GL_FLOAT, &width, widthLoc));
+	m_demoObjects[4].AddUniformData(Engine::UniformData(GL_FLOAT, &height, heightLoc));
+	m_demoObjects[4].AddUniformData(Engine::UniformData(GL_INT, &numRows, rowsLoc));
+	m_demoObjects[4].AddUniformData(Engine::UniformData(GL_INT, &numColumns, columnsLoc));
+	m_demoObjects[4].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &rowColor, rowColLoc));
+	m_demoObjects[4].AddUniformData(Engine::UniformData(GL_FLOAT_VEC3, &columnColor, colColLoc));
 
 	int objectsX = 10;
 	int objectsY = 10;
