@@ -612,12 +612,10 @@ namespace Engine
 	bool ShapeGenerator::MakeDemoQuad(GraphicalObject * pObject, GLuint shaderProgramID)
 	{
 		// TODO: SUPPORT MULTIPLE FRUSTUMS OF DIFFERENT SIZES!?!??! maybe not needed  - just pasted comment
-		static bool first = true;
 		if (!pObject) { GameLogger::Log(MessageType::cError, "ShapeGenerator failed to make a DemoQuad! Invalid graphical object pointer passed!\n"); return false; }
 
 		// only setup mesh the first time a shape of this type is being created, no wasted buffer space
-		if (first) { if (!SetupDemoQuad(shaderProgramID)) { return false; } first = false; }
-
+		if (!SetupDemoQuad(shaderProgramID)) { return false; }
 		pObject->SetMeshPointer(&demoQuadMesh);
 
 		GameLogger::Log(MessageType::Process, "ShapeGenerator made a DemoQuad!\n");

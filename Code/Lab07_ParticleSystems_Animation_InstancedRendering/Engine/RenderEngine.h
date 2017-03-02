@@ -30,6 +30,8 @@ namespace Engine
 		static bool DrawSingleObjectRegularly(GraphicalObject * pGob);
 		static bool DrawSingleObjectWithDifferentMeshMode(GraphicalObject * pGob, GLenum meshMode);
 		static bool DrawInstanced(GraphicalObject *pGob, InstanceBuffer *pInstanceBuffer);
+		static bool DrawInstanced(GraphicalObject *pGob, int count);
+
 		static void LogStats();
 
 	private:

@@ -152,7 +152,17 @@ int gravityLoc;
 Engine::Vec3 darginVelocity;
 int darginVelLoc;
 bool drawDemoQuads = false;
+bool doInBuffer = true;
 Engine::InstanceBuffer instanceBuffer;
+
+int numRows = 10;
+int numColumns = 10;
+int rowsLoc;
+int columnsLoc;
+float width = 0.5f;
+float height = 0.5f;
+int widthLoc;
+int heightLoc;
 
 bool EngineDemo::Initialize(Engine::MyWindow *window)
 {
@@ -191,7 +201,7 @@ bool EngineDemo::Initialize(Engine::MyWindow *window)
 	}
 
 	// ` for numpad 0
-	if (!keyboardManager.AddKeys("XTWASDRFLGCM QE01234567`9iKNJB")
+	if (!keyboardManager.AddKeys("XTWASDRFLGCM QE012345678`9iKNJB")
 		|| !keyboardManager.AddKey(VK_OEM_4) || !keyboardManager.AddKey(VK_OEM_6) || !keyboardManager.AddKey(VK_OEM_5)
 		|| !keyboardManager.AddKey(VK_PRIOR) || !keyboardManager.AddKey(VK_NEXT)
 		|| !keyboardManager.AddKey(VK_OEM_PERIOD) || !keyboardManager.AddKey(VK_SHIFT))
@@ -376,11 +386,13 @@ void EngineDemo::Draw()
 	// Clear window
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	m_demoObjects[3].SetEnabled(false);
 	m_demoObjects[2].SetEnabled(false);
 	m_demoObjects[1].SetEnabled(false);
 	Engine::RenderEngine::Draw();
 	m_demoObjects[1].SetEnabled(true);
 	m_demoObjects[2].SetEnabled(true);
+	m_demoObjects[3].SetEnabled(true);
 
 	glEnable(GL_BLEND);
 	glDisable(GL_DEPTH_TEST);
@@ -390,7 +402,14 @@ void EngineDemo::Draw()
 
 	if (drawDemoQuads)
 	{
-		Engine::RenderEngine::DrawInstanced(&m_demoObjects[2], &instanceBuffer);
+		if (doInBuffer)
+		{
+			Engine::RenderEngine::DrawInstanced(&m_demoObjects[2], &instanceBuffer);
+		}
+		else
+		{
+			Engine::RenderEngine::DrawInstanced(&m_demoObjects[3], numRows * numColumns);
+		}
 	}
 
 
@@ -563,8 +582,8 @@ bool EngineDemo::InitializeGL()
 
 	if (m_shaderPrograms[7].Initialize())
 	{					 
-		m_shaderPrograms[7].AddVertexShader("..\\Data\\Shaders\\Spotlight.vert.shader");
-		m_shaderPrograms[7].AddFragmentShader("..\\Data\\Shaders\\Spotlight.frag.shader");
+		m_shaderPrograms[7].AddVertexShader("..\\Data\\Shaders\\DemoQuad2.vert.shader");
+		m_shaderPrograms[7].AddFragmentShader("..\\Data\\Shaders\\DemoQuad2.frag.shader");
 		m_shaderPrograms[7].LinkProgram();
 		m_shaderPrograms[7].UseProgram();
 	}
@@ -614,7 +633,7 @@ bool EngineDemo::InitializeGL()
 
 	//directionalPositionLoc = m_shaderPrograms[3].GetUniformLocation("objectCenterPosition_WorldSpace");
 	//lightsMin = m_shaderPrograms[6].GetUniformLocation("lights[0].positionEye");
-	spotMin = m_shaderPrograms[7].GetUniformLocation("spotLight.positionEye");
+	//spotMin = m_shaderPrograms[7].GetUniformLocation("spotLight.positionEye");
 	levelsLoc = m_shaderPrograms[8].GetUniformLocation("numLevels");
 	//fogMinLoc = m_shaderPrograms[9].GetUniformLocation("fog.minDist");
 	//fogMaxLoc = m_shaderPrograms[9].GetUniformLocation("fog.maxDist");
@@ -641,6 +660,11 @@ bool EngineDemo::InitializeGL()
 	lifeTimeLoc = m_shaderPrograms[5].GetUniformLocation("uParticleLifetime");
 	gravityLoc = m_shaderPrograms[5].GetUniformLocation("uGravity");
 	//darginVelLoc = m_shaderPrograms[5].GetUniformLocation("velocityOffset");
+
+	widthLoc = m_shaderPrograms[7].GetUniformLocation("width");
+	heightLoc = m_shaderPrograms[7].GetUniformLocation("height");
+	rowsLoc = m_shaderPrograms[7].GetUniformLocation("numRows");
+	columnsLoc = m_shaderPrograms[7].GetUniformLocation("numColumns");
 
 	if (Engine::MyGL::TestForError(Engine::MessageType::cFatal_Error, "InitializeGL errors!"))
 	{
@@ -705,6 +729,7 @@ bool EngineDemo::ProcessInput(float dt)
 
 	if (keyboardManager.KeyWasPressed('6')) { time = 0.0f; }
 	if (keyboardManager.KeyWasPressed('7')) { drawDemoQuads = !drawDemoQuads; }
+	if (keyboardManager.KeyWasPressed('8')) { doInBuffer = !doInBuffer; }
 
 	//if (keyboardManager.KeyWasPressed('0')) { HandleBitKeys(0); }
 	//if (keyboardManager.KeyWasPressed('2')) { HandleBitKeys(2); }
@@ -1057,6 +1082,13 @@ bool EngineDemo::UglyDemoCode()
 
 	Engine::ShapeGenerator::MakeDemoQuad(&m_demoObjects[2], m_shaderPrograms[6].GetProgramId());
 	Engine::RenderEngine::AddGraphicalObject(&m_demoObjects[2]);
+
+	Engine::ShapeGenerator::MakeDemoQuad(&m_demoObjects[3], m_shaderPrograms[7].GetProgramId());
+	Engine::RenderEngine::AddGraphicalObject(&m_demoObjects[3]);
+	m_demoObjects[3].AddUniformData(Engine::UniformData(GL_FLOAT, &width, widthLoc));
+	m_demoObjects[3].AddUniformData(Engine::UniformData(GL_FLOAT, &height, heightLoc));
+	m_demoObjects[3].AddUniformData(Engine::UniformData(GL_INT, &numRows, rowsLoc));
+	m_demoObjects[3].AddUniformData(Engine::UniformData(GL_INT, &numColumns, columnsLoc));
 
 	int objectsX = 10;
 	int objectsY = 10;

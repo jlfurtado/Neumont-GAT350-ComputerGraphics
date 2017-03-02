@@ -438,6 +438,83 @@ namespace Engine
 		return true;
 	}
 
+	bool RenderEngine::DrawInstanced(GraphicalObject * pGob, int count)
+	{
+		// get pointers to the correct buffer info and group so we can setup the drawing enivornment properly for this object
+		BufferGroup *pCurrentBufferGroup = nullptr;
+		BufferInfo *pCurrentBufferInfo = nullptr;
+
+		// search for the correct buffer info and group
+		bool found = false;
+		for (int i = 0; i < BufferManager::GetNextBufferGroup() && !found; ++i)
+		{
+			BufferGroup * pBG = BufferManager::GetBufferGroups() + i;
+			for (int j = 0; j < pBG->GetNextBufferInfo() && !found; ++j)
+			{
+				BufferInfo *pBI = pBG->GetBufferInfos() + j;
+				if (pBI->BelongsInBuffer(pGob)) { pCurrentBufferInfo = pBI; pCurrentBufferGroup = pBG; found = true; }
+			}
+		}
+
+		// if it is not found, explode violently
+		if (!found) { GameLogger::Log(MessageType::cError, "Failed to DrawInstanced! Could not find buffer object belongs in!\n"); return false; }
+
+		// convenience pointer :)
+		// get shader program for current group
+		ShaderProgram *pCurrentProgram = GetShaderProgramByID(pCurrentBufferGroup->GetShaderProgramID());
+
+		// if invalid don't stop drawing everything, just don't draw things from this group
+		if (!pCurrentProgram)
+		{
+			GameLogger::Log(MessageType::cWarning, "Failed to use shader program for buffer group in single draw! Shader program was not found in render engine!\n");
+			return false;
+		}
+
+		// if not invalid, use it
+		if (!pCurrentProgram->UseProgram())
+		{
+			GameLogger::Log(MessageType::cWarning, "Failed to use shader program for buffer group in single draw! Will not draw objects from that group!\n");
+			return false;
+		}
+
+		//if (Engine::MyGL::TestForError(Engine::MessageType::ConsoleOnly, "Spot BEFORE CULLING")) { return false; }
+
+		// grouped based on culling, set culling once for the whole group instead of for every object!
+		if (pCurrentBufferGroup->BufferGroupDoesCull()) {
+			glEnable(GL_CULL_FACE);
+		}
+		else {
+			glDisable(GL_CULL_FACE);
+		}
+
+		// attempt to set attribs and bind buffers
+		if (!SetupDrawingEnvironment(pCurrentBufferInfo)) { GameLogger::Log(MessageType::cWarning, "Failed to setup drawing environment for buffer info in single draw! Will not draw from list!\n"); return false; }
+
+		if (pGob->IsEnabled())
+		{
+			// call the callback, pass the uniforms
+			pGob->PassUniforms();
+			pGob->CallCallback();
+
+			// draw
+			if (pGob->GetMeshPointer()->IsIndexed())
+			{
+				glDrawElementsInstancedBaseVertex(pGob->GetMeshPointer()->GetMeshMode(), pGob->GetMeshPointer()->GetIndexCount(),
+					GetIndexType(pGob->GetMeshPointer()->GetIndexSize()),
+					(void *)(pGob->GetMeshPointer()->GetRenderInfoPtr()->indexBufferOffset), count,
+					pGob->GetMeshPointer()->GetRenderInfoPtr()->vertexBufferOffset / pGob->GetMeshPointer()->GetSizeOfVertex());
+			}
+			else
+			{
+				glDrawArraysInstanced(pGob->GetMeshPointer()->GetMeshMode(),
+					pGob->GetMeshPointer()->GetRenderInfoPtr()->vertexBufferOffset / pGob->GetMeshPointer()->GetSizeOfVertex(),
+					pGob->GetMeshPointer()->GetVertexCount(), count);
+			}
+		}
+
+		return true;
+	}
+
 	void RenderEngine::LogStats()
 	{
 		BufferManager::ConsoleLogStats();
